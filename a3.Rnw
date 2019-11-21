@@ -1,0 +1,242 @@
+\documentclass{article}
+\title{Laboratory Assignment 3} 
+\author{Katherine Wolf}
+\date{\today}
+
+% list of latex packages you'll need
+\usepackage{float}  % for tables
+\usepackage{mathtools}  % for mathematical symbols
+\usepackage{bm}  % to bold mathematical symbols like betas
+\usepackage{scrextend}  % to indent subsections
+\usepackage{xltxtra,fontspec,xunicode}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{sectsty}  % change fonts for sections
+\usepackage{soul}  % get underlines
+\usepackage[skip=0.5\baselineskip]{caption}  % control caption printing space
+
+% set fonts
+\setmainfont{Georgia}
+\setsansfont[Scale=MatchLowercase]{Arial}  % sets the sans font
+\setmonofont[Scale=MatchLowercase]{inconsolata}  % sets the monospace font
+
+% make special code formatting
+\NewDocumentCommand{\codeword}{v}{%
+  \texttt{\textcolor{RoyalPurple}{#1}}%
+}
+
+% set the margins of the document
+\usepackage[top=1in, bottom=1in, left=.5in, right=.5in]{geometry}
+\setlength\parindent{0pt}
+
+% make quick draft versus final versions
+\newif\ifdraft  % make draft command
+\draftfalse  % one of these must be commented
+% \drafttrue  % one of these must be commented
+
+% end the preamble and begin the document
+\begin{document}
+
+
+<<include=FALSE>>=
+
+# packages
+library(tidyverse)
+library(xtable)
+
+@
+
+  \vspace*{-2cm}
+  {\let\newpage\relax\maketitle}
+  
+\maketitle
+
+\ifdraft
+
+\textbf{Read all questions carefully before answering.} You may work in small groups of no more than 3 individuals and turn in a single assignment (and everyone in the group will receive the same grade). Work through the entire assignment individually first, then come together to discuss and collaborate. Please type your responses, \textbf{show your work, and please keep answers brief}.
+
+\section*{Directions}
+
+\vspace{2mm}
+
+Use the dataset \codeword{frmgham_recoded.Rdata} and code provided herein to explore the relationship between smoking status at baseline and time to death in the Framingham cohort.
+
+\fi
+
+\ifdraft
+
+<<include = TRUE>>=
+
+load("frmgham_recoded.Rdata")
+library(survival)
+#CREATE A SINGLE-RECORD DATASET (retain 1st observation)
+frmgham_recoded <- frmgham_recoded[which(frmgham_recoded$period == 1),]
+
+@
+
+\else
+
+<<include = FALSE>>=
+
+load("frmgham_recoded.Rdata")
+library(survival)
+#CREATE A SINGLE-RECORD DATASET (retain 1st observation)
+frmgham_recoded <- frmgham_recoded[which(frmgham_recoded$period == 1),]
+
+@
+
+\fi
+
+\ifdraft
+
+\vspace{2mm}
+
+The relevant variables for this analysis are:
+\begin{itemize}
+  \item \codeword{time_yrs} (time of entry into study)
+  \item \codeword{death} (indicator of death [=1] or censored [=0])
+  \item \codeword{cursmoke} (indicator of current smoking status: yes (1) vs. no (0))
+  \item \codeword{age} (age in years)
+  \item \codeword{sex} (variable denoting male (1) or female (2); \textbf{use 1 as referent category})
+  \item \codeword{educ} (educational status, nominal categories 1-4; \textbf{use 1 as referent category})
+\end{itemize}
+
+Adapting the code presented in the lecture, and the additional piece below, complete the following tasks:
+
+\vspace{2mm}
+
+\textbf{Describing survival data (Questions 1-2, part of 7)}
+
+\begin{itemize}
+  \item Referring to the code from the lecture notes, \textbf{plot the Kaplan-Meier estimate of the survival function} for each smoking category (using the variable cursmoke) for these data.
+  \item Using the code below, \textbf{calculate the number of events and number of person-years in each exposure group}:
+\end{itemize}
+
+\fi
+
+\ifdraft
+
+<<include = TRUE>>=
+
+# The "scale" option set to 1 tells pyears() that the time is already in yrs
+# (default is to divide time by 365.25)
+py.smoke <- pyears(Surv(timedth_yrs,death)~cursmoke, frmgham_recoded,
+scale=1)[c("event","pyears")]
+simplify2array(py.smoke) # Make it pretty
+
+@
+
+\else
+
+<<include = FALSE>>=
+
+# The "scale" option set to 1 tells pyears() that the time is already in yrs
+# (default is to divide time by 365.25)
+py.smoke <- pyears(Surv(timedth_yrs,death)~cursmoke, frmgham_recoded,
+scale=1)[c("event","pyears")]
+simplify2array(py.smoke) # Make it pretty
+
+@
+
+\fi
+
+\ifdraft
+
+\textbf{Proportional hazards modeling (Questions 3-8)}
+\begin{itemize}
+  \item Referring to the code from the lecture notes, \textbf{use the log-rank test to determine if there are any differences in survival between the smoking groups}.
+  \item \textbf{Using a Cox proportional hazards regression model}, estimate the association between current smoking status (at baseline) and time to death. Estimate 2 models:
+  \begin{itemize}
+    \item An \textbf{unadjusted} model (only including smoking status), and
+    \item An \textbf{adjusted} model that also includes age (continuous), sex (binary) and education (4-category) in this model. (For nominal categorical variables, you may need to use the \codeword{factor()} operator in the formula as demonstrated in class.)
+  \end{itemize}
+  \item Estimate a model with \textbf{an interaction between linear follow-up time} and \ul{all} of the covariates in the model. \textit{(Hint: you will need to use the ‘tt()‘ function within the ‘coxph‘ command.)}
+\end{itemize}
+
+\pagebreak
+
+\fi
+
+\section*{Questions}
+
+\vspace{2mm}
+
+\begin{enumerate}
+  \item Using the Kaplan-Meier plots, graphically assess the relationship between baseline smoking status and time to death. \textbf{Briefly interpret what you see.} In 1-2 sentences describe the limitations of this approach. [{\ul{include the graph}}, labeled \textbf{Figure 1}] \textbf{(10 points)}
+  \item \textbf{Referring to the code from lecture}, are you able to calculate the overall median survival time in this case? If so, provide an estimate of this quantity, if not, describe why and provide an estimate of a percentile of survival time (of your choice). Interpret the quantity that you estimated. \textbf{(20 points)}
+  \item Answer the following questions about the log-rank test: \textbf{(10 points total)}
+  \begin{enumerate}
+    \item Describe the specific null and alternative hypotheses that the log-rank test is considering here.
+    \item What do you conclude from this test (use 5\% significance criteria)? List a limitation of the inference that you obtain from the log-rank test.
+  \end{enumerate}
+\item Answer the following questions about the Cox models estimated above: \textbf{(20 points total)}
+  \begin{enumerate}
+    \item Why do we use specialized methods for survival analysis (instead of linear or logistic regression, for example)? (Hint: See readings from Vittinghoff et al. 2012 text.)
+    \item What are the advantages of the Cox model over other survival analysis methods? What is a potential disadvantage of the Cox model?
+    \item What assumptions, if any, does the standard \textbf{Cox} proportional hazards model make?
+    \item Compare the test of the smoking-mortality association between the log-rank test and the likelihood ratio test from the \ul{unadjusted} Cox proportional hazards model. What do you observe? Between these two analytic approaches, which one would you prefer, and why?
+  \end{enumerate}
+  \item Write the equation for the log-hazard function for the \textit{adjusted} model you estimated. \textbf{Clearly define all functions, terms (covariates), and parameters in the model. (20 points)}
+  \item Complete the following table. How would you interpret the parameter estimate that compares smokers to non-smokers in the \textbf{adjusted model}? What measure of association common in epidemiologic research does this correspond to? \textbf{(10 points)}
+
+<<include=FALSE>>=
+
+# Make a data.frame with the results
+q6table <- 
+  tibble(
+   Smoker = 
+     c("No", 
+       "Yes"), 
+   Events = 
+     c("", 
+       ""), 
+   `Follow-Up Time (years)` = 
+     c("", 
+       ""), 
+   `Crude HR (95% CI)` = 
+     c("", 
+       ""), 
+   `Adjusted HR (95% CI)` = 
+     c("", 
+       "") 
+   ) 
+
+@
+
+<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+# Q2: Convert the data.frame into a latex table
+print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA."), table.placement = "H", caption.placement = "top", caption.width = "10cm", include.rownames = FALSE)
+
+@
+  
+  \item Based on the model that included covariate-by-time interactions, is there evidence for a violation of the proportional hazards assumption in any of the variables? Indicate how you arrived at your conclusion. \ul{In 1-2 sentences} describe in general how you would account for any violations in the proportional hazards assumption (ignoring whether or not there were significant differences here). \textbf{(10 points)}
+\end{enumerate}
+
+\pagebreak
+
+\section*{Question 1}
+
+\pagebreak
+
+\section*{Question 2}
+
+\pagebreak
+
+\section*{Question 3}
+
+\pagebreak
+
+\section*{Question 4}
+
+\pagebreak
+
+\section*{Question 5}
+
+\pagebreak
+
+\section*{Question 6}
+
+\pagebreak
+
+\section*{Question 7}
+
+\end{document}
