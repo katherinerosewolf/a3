@@ -42,6 +42,9 @@
 # packages
 library(tidyverse)
 library(xtable)
+library(survival)
+library(survminer)
+library(ggplot2)
 
 @
 
@@ -60,33 +63,22 @@ library(xtable)
 
 Use the dataset \codeword{frmgham_recoded.Rdata} and code provided herein to explore the relationship between smoking status at baseline and time to death in the Framingham cohort.
 
-\fi
-
-\ifdraft
-
 <<include = TRUE>>=
 
 load("frmgham_recoded.Rdata")
 library(survival)
-#CREATE A SINGLE-RECORD DATASET (retain 1st observation)
-frmgham_recoded <- frmgham_recoded[which(frmgham_recoded$period == 1),]
+
+# create a single-record (retain 1st observation)
+frmgham_recoded <- 
+  frmgham_recoded[which(frmgham_recoded$period == 1),]
+
+# fix sex so that male is 0 and female is 1
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(sex01 = as.integer(sex - 1))
 
 @
 
-\else
-
-<<include = FALSE>>=
-
-load("frmgham_recoded.Rdata")
-library(survival)
-#CREATE A SINGLE-RECORD DATASET (retain 1st observation)
-frmgham_recoded <- frmgham_recoded[which(frmgham_recoded$period == 1),]
-
-@
-
-\fi
-
-\ifdraft
 
 \vspace{2mm}
 
@@ -108,53 +100,134 @@ Adapting the code presented in the lecture, and the additional piece below, comp
 
 \begin{itemize}
   \item Referring to the code from the lecture notes, \textbf{plot the Kaplan-Meier estimate of the survival function} for each smoking category (using the variable cursmoke) for these data.
+  
+1. Call in the `survival` package.   
+2. Recode `status` so that death = 1 and censored = 0.   
+3. Use `Surv()` to set up your outcome object.   
+4. Use `survfit` with `conf.type = "log-log"` to estimate the K-M survival function.   
+5. Plot the K-M survival curve using `plot(survival_object, bty = "l")`   
+6. Estimate the median survival time using the `quantile` function.   
+  
+<<include = TRUE>>=
+
+#### make kaplan-meier model
+s_death <- 
+  with(
+    frmgham_recoded, 
+    Surv(
+      time = timedth,
+      event = death)
+    )
+
+km_death_smoke <- 
+  with(
+    frmgham_recoded, 
+    survfit(
+      s_death ~ cursmoke)
+    )
+
+ggsurvplot(
+  km_death_smoke, 
+  data = frmgham_recoded, 
+  title = "Kaplan-Meier Survival Estimates by Current Smoking Status", 
+  xlab = "Time (days)", 
+  ylab = "Survival Probability"
+)
+
+@
+  
   \item Using the code below, \textbf{calculate the number of events and number of person-years in each exposure group}:
 \end{itemize}
 
-\fi
-
-\ifdraft
 
 <<include = TRUE>>=
 
 # The "scale" option set to 1 tells pyears() that the time is already in yrs
 # (default is to divide time by 365.25)
-py.smoke <- pyears(Surv(timedth_yrs,death)~cursmoke, frmgham_recoded,
-scale=1)[c("event","pyears")]
-simplify2array(py.smoke) # Make it pretty
+py.smoke <- pyears(Surv(timedth_yrs,death) ~ cursmoke, 
+                   frmgham_recoded,
+                   scale = 1)[c("event", "pyears")]
+
+# Make it pretty
+simplify2array(py.smoke)
 
 @
 
-\else
-
-<<include = FALSE>>=
-
-# The "scale" option set to 1 tells pyears() that the time is already in yrs
-# (default is to divide time by 365.25)
-py.smoke <- pyears(Surv(timedth_yrs,death)~cursmoke, frmgham_recoded,
-scale=1)[c("event","pyears")]
-simplify2array(py.smoke) # Make it pretty
-
-@
-
-\fi
-
-\ifdraft
 
 \textbf{Proportional hazards modeling (Questions 3-8)}
 \begin{itemize}
   \item Referring to the code from the lecture notes, \textbf{use the log-rank test to determine if there are any differences in survival between the smoking groups}.
+  
+
+<<include = TRUE>>=
+
+survdiff(s_death ~ cursmoke, 
+         data = frmgham_recoded)
+
+@
+
   \item \textbf{Using a Cox proportional hazards regression model}, estimate the association between current smoking status (at baseline) and time to death. Estimate 2 models:
   \begin{itemize}
     \item An \textbf{unadjusted} model (only including smoking status), and
+    
+<<include = TRUE>>=
+
+coxph_death_smoke <- 
+  coxph(s_death ~ cursmoke, # the regression formula
+                    data = frmgham_recoded, # the data
+                    ties = "efron") # how to handle ties
+
+summary(coxph_death_smoke) # Model output
+
+@
+    
     \item An \textbf{adjusted} model that also includes age (continuous), sex (binary) and education (4-category) in this model. (For nominal categorical variables, you may need to use the \codeword{factor()} operator in the formula as demonstrated in class.)
+    
+<<include = TRUE>>=
+
+# fit adjusted model
+coxph_death_smoke_adjusted <- 
+  coxph(s_death ~ cursmoke + age + factor(sex01) + factor(educ), 
+        data = frmgham_recoded, 
+        ties = "efron")
+
+summary(coxph_death_smoke_adjusted)
+
+@
+    
   \end{itemize}
   \item Estimate a model with \textbf{an interaction between linear follow-up time} and \ul{all} of the covariates in the model. \textit{(Hint: you will need to use the ‘tt()‘ function within the ‘coxph‘ command.)}
 \end{itemize}
 
-\pagebreak
+
+<<include = TRUE>>=
+
+cox_time_death_smoke <- 
+  coxph(Surv(timedth_yrs, death) ~ 
+          factor(cursmoke) + age + factor(sex01) + factor(educ) + 
+          tt(cursmoke) +
+          tt(age) +
+          tt(sex01) +
+          tt(as.integer(educ == 2)) +
+          tt(as.integer(educ == 3)) +
+          tt(as.integer(educ == 4)), 
+        data = frmgham_recoded, 
+        method = "efron",
+        tt = function(x,t,...) x*t)
+
+summary(cox_time_death_smoke)
+
+@
+
+% put only code chunks with "FALSE" here to produce final document
+
+\else
+
+
 
 \fi
+
+\pagebreak
 
 \section*{Questions}
 
