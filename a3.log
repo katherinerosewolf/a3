@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/W32TeX) (preloaded format=xelatex 2019.11.20)  20 NOV 2019 23:29
+This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/W32TeX) (preloaded format=xelatex 2019.11.20)  23 NOV 2019 18:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -503,20 +503,6 @@ Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
 hics/dvipsnam.def
 File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
 ))
-(c:/Users/Katherine Rose Wolf/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/sect
-sty/sectsty.sty
-Package: sectsty 2002/02/25 v2.0.2 Commands to change all sectional heading sty
-les
-
-
-LaTeX Warning: Command \underbar  has changed.
-               Check if current package is valid.
-
-
-LaTeX Warning: Command \underline  has changed.
-               Check if current package is valid.
-
-)
 (c:/Users/Katherine Rose Wolf/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/soul
 /soul.sty
 Package: soul 2003/11/17 v2.4 letterspacing/underlining (mf)
@@ -549,6 +535,25 @@ Package caption3 Info: TeX engine: e-TeX on input line 64.
 \c@caption@flags=\count273
 \c@ContinuedFloat=\count274
 Package caption Info: float package is loaded.
+)
+(c:/Users/Katherine Rose Wolf/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/tool
+s/longtable.sty
+Package: longtable 2019/02/06 v4.12 Multi-page Table package (DPC)
+\LTleft=\skip58
+\LTright=\skip59
+\LTpre=\skip60
+\LTpost=\skip61
+\LTchunksize=\count275
+\LTcapwidth=\dimen173
+\LT@head=\box54
+\LT@firsthead=\box55
+\LT@foot=\box56
+\LT@lastfoot=\box57
+\LT@cols=\count276
+\LT@rows=\count277
+\c@LT@tables=\count278
+\c@LT@chunks=\count279
+\LT@p@ftn=\toks31
 )
 
 Package fontspec Info: Font family 'Georgia(0)' created for font 'Georgia'
@@ -699,18 +704,18 @@ Package: ifpdf 2019/10/25 v3.4 ifpdf legacy package. Use iftex instead.
 tex/ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
 )
-\Gm@cnth=\count275
-\Gm@cntv=\count276
-\c@Gm@tempcnt=\count277
-\Gm@bindingoffset=\dimen173
-\Gm@wd@mp=\dimen174
-\Gm@odd@mp=\dimen175
-\Gm@even@mp=\dimen176
-\Gm@layoutwidth=\dimen177
-\Gm@layoutheight=\dimen178
-\Gm@layouthoffset=\dimen179
-\Gm@layoutvoffset=\dimen180
-\Gm@dimlist=\toks31
+\Gm@cnth=\count280
+\Gm@cntv=\count281
+\c@Gm@tempcnt=\count282
+\Gm@bindingoffset=\dimen174
+\Gm@wd@mp=\dimen175
+\Gm@odd@mp=\dimen176
+\Gm@even@mp=\dimen177
+\Gm@layoutwidth=\dimen178
+\Gm@layoutheight=\dimen179
+\Gm@layouthoffset=\dimen180
+\Gm@layoutvoffset=\dimen181
+\Gm@dimlist=\toks32
 )
 (c:/Users/Katherine Rose Wolf/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/upqu
 ote/upquote.sty
@@ -897,6 +902,12 @@ LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> TU/inconsolata(0)/bx/n on input line 8
 8.
 Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: longtable package is loaded.
+
+(c:/Users/Katherine Rose Wolf/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/capt
+ion/ltcaption.sty
+Package: ltcaption 2018/08/26 v1.4a longtable captions (AR)
+)
 Package caption Info: End \AtBeginDocument code.
 
 *geometry* driver: auto-detecting
@@ -935,14 +946,54 @@ Package caption Info: End \AtBeginDocument code.
 
 [1
 
-] [2] [3] [4] [5] [6] [7] [8] (./a3.aux) ) 
-Here is how much of TeX's memory you used:
- 21279 strings out of 494465
- 421047 string characters out of 6171171
- 521456 words of memory out of 5000000
- 25444 multiletter control sequences out of 15000+600000
- 542337 words of font info for 94 fonts, out of 8000000 for 9000
- 14 hyphenation exceptions out of 8191
- 57i,8n,116p,456b,429s stack positions out of 5000i,500n,10000p,200000b,80000s
+]
 
-Output written on a3.pdf (8 pages).
+Package xcolor Warning: Incompatible color definition on input line 586.
+
+LaTeX Font Info:    Font shape `TU/inconsolata(0)/m/n' will be
+(Font)              scaled to size 10.53482pt on input line 587.
+LaTeX Font Info:    Font shape `TU/inconsolata(0)/bx/n' will be
+(Font)              scaled to size 10.3093pt on input line 588.
+File: figure/echo-FALSE-1.pdf Graphic file (type pdf)
+<use figure/echo-FALSE-1.pdf>
+[2]
+Underfull \vbox (badness 10000) detected at line 641
+ []
+
+[3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17] [18]
+[19] [20] [21] [22] [23] [24] [25] [26] [27] [28] [29]
+
+Package xcolor Warning: Incompatible color definition on input line 2106.
+
+
+Package xcolor Warning: Incompatible color definition on input line 2109.
+
+
+Overfull \hbox (11.05307pt too wide) in paragraph at lines 2109--2109
+[]\TU/inconsolata(0)/m/n/10 ## Warning in print.xtable(xtable(km_death_table), 
+round = 4, tabular.environment = "longtable"): Attempt
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 2109.
+
+
+Package xcolor Warning: Incompatible color definition on input line 2109.
+
+
+Underfull \vbox (badness 10000) detected at line 2134
+ []
+
+[30] [31] [32] [33] [34] [35] [36] [37] [38] [39] [40] [41] [42] [43] [44]
+[45] [46] [47] [48] [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59]
+[60] [61] [62] (./a3.aux) ) 
+Here is how much of TeX's memory you used:
+ 21322 strings out of 494465
+ 421733 string characters out of 6171171
+ 551453 words of memory out of 5000000
+ 25479 multiletter control sequences out of 15000+600000
+ 542353 words of font info for 96 fonts, out of 8000000 for 9000
+ 14 hyphenation exceptions out of 8191
+ 57i,8n,116p,504b,429s stack positions out of 5000i,500n,10000p,200000b,80000s
+
+Output written on a3.pdf (62 pages).

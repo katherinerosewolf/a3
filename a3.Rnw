@@ -10,9 +10,9 @@
 \usepackage{scrextend}  % to indent subsections
 \usepackage{xltxtra,fontspec,xunicode}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{sectsty}  % change fonts for sections
 \usepackage{soul}  % get underlines
 \usepackage[skip=0.5\baselineskip]{caption}  % control caption printing space
+\usepackage{longtable}
 
 % set fonts
 \setmainfont{Georgia}
@@ -30,8 +30,8 @@
 
 % make quick draft versus final versions
 \newif\ifdraft  % make draft command
-\draftfalse  % one of these must be commented
-% \drafttrue  % one of these must be commented
+% \draftfalse  % one of these must be commented
+\drafttrue  % one of these must be commented
 
 % end the preamble and begin the document
 \begin{document}
@@ -45,6 +45,7 @@ library(xtable)
 library(survival)
 library(survminer)
 library(ggplot2)
+library(ggfortify)
 
 @
 
@@ -72,10 +73,30 @@ library(survival)
 frmgham_recoded <- 
   frmgham_recoded[which(frmgham_recoded$period == 1),]
 
+# make death into a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(death_f = factor(death))
+
+# make cursmoke into a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(cursmoke_f = factor(cursmoke))
+
 # fix sex so that male is 0 and female is 1
 frmgham_recoded <- 
   frmgham_recoded %>% 
-  mutate(sex01 = as.integer(sex - 1))
+  mutate(sex_01 = sex - 1)
+
+# fix sex so that male is 0 and female is 1 and a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(sex_01_f = factor(sex - 1))
+
+# make education into a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(educ_f = factor(educ))
 
 @
 
@@ -115,7 +136,7 @@ s_death <-
   with(
     frmgham_recoded, 
     Surv(
-      time = timedth,
+      time = timedth_yrs,
       event = death)
     )
 
@@ -130,7 +151,7 @@ ggsurvplot(
   km_death_smoke, 
   data = frmgham_recoded, 
   title = "Kaplan-Meier Survival Estimates by Current Smoking Status", 
-  xlab = "Time (days)", 
+  xlab = "Time (years)", 
   ylab = "Survival Probability"
 )
 
@@ -144,7 +165,7 @@ ggsurvplot(
 
 # The "scale" option set to 1 tells pyears() that the time is already in yrs
 # (default is to divide time by 365.25)
-py.smoke <- pyears(Surv(timedth_yrs,death) ~ cursmoke, 
+py.smoke <- pyears(Surv(timedth_yrs, death) ~ cursmoke_f, 
                    frmgham_recoded,
                    scale = 1)[c("event", "pyears")]
 
@@ -161,7 +182,7 @@ simplify2array(py.smoke)
 
 <<include = TRUE>>=
 
-survdiff(s_death ~ cursmoke, 
+survdiff(s_death ~ cursmoke_f, 
          data = frmgham_recoded)
 
 @
@@ -187,7 +208,7 @@ summary(coxph_death_smoke) # Model output
 
 # fit adjusted model
 coxph_death_smoke_adjusted <- 
-  coxph(s_death ~ cursmoke + age + factor(sex01) + factor(educ), 
+  coxph(s_death ~ cursmoke_f + age + sex_01_f + educ_f, 
         data = frmgham_recoded, 
         ties = "efron")
 
@@ -199,15 +220,40 @@ summary(coxph_death_smoke_adjusted)
   \item Estimate a model with \textbf{an interaction between linear follow-up time} and \ul{all} of the covariates in the model. \textit{(Hint: you will need to use the ‘tt()‘ function within the ‘coxph‘ command.)}
 \end{itemize}
 
+<<include = TRUE, cache = TRUE>>=
 
-<<include = TRUE>>=
-
-cox_time_death_smoke <- 
+cox_time_death_smoke_factored <- 
   coxph(Surv(timedth_yrs, death) ~ 
-          factor(cursmoke) + age + factor(sex01) + factor(educ) + 
+          cursmoke_f + 
+          age + 
+          sex_01_f + 
+          educ_f + 
           tt(cursmoke) +
           tt(age) +
-          tt(sex01) +
+          tt(sex_01) +
+          tt(as.integer(educ_f == 2)) +
+          tt(as.integer(educ_f == 3)) +
+          tt(as.integer(educ_f == 4)), 
+        data = frmgham_recoded, 
+        method = "efron",
+        tt = function(x,t,...) x*t)
+
+summary(cox_time_death_smoke_factored)
+
+@
+
+
+<<include = TRUE, cache = TRUE>>=
+
+cox_time_death_smoke_not_factored <- 
+  coxph(Surv(timedth_yrs, death) ~ 
+          cursmoke + 
+          age + 
+          sex_01 + 
+          factor(educ) + 
+          tt(cursmoke) +
+          tt(age) +
+          tt(sex_01) +
           tt(as.integer(educ == 2)) +
           tt(as.integer(educ == 3)) +
           tt(as.integer(educ == 4)), 
@@ -215,7 +261,7 @@ cox_time_death_smoke <-
         method = "efron",
         tt = function(x,t,...) x*t)
 
-summary(cox_time_death_smoke)
+summary(cox_time_death_smoke_not_factored)
 
 @
 
@@ -223,11 +269,164 @@ summary(cox_time_death_smoke)
 
 \else
 
+<<include = FALSE>>=
 
+load("frmgham_recoded.Rdata")
+library(survival)
+
+# create a single-record (retain 1st observation)
+frmgham_recoded <- 
+  frmgham_recoded[which(frmgham_recoded$period == 1),]
+
+# make death into a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(death_f = factor(death))
+
+# make cursmoke into a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(cursmoke_f = factor(cursmoke))
+
+# fix sex so that male is 0 and female is 1
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(sex_01 = sex - 1)
+
+# fix sex so that male is 0 and female is 1 and a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(sex_01_f = factor(sex - 1))
+
+# make education into a factor
+frmgham_recoded <- 
+  frmgham_recoded %>% 
+  mutate(educ_f = factor(educ))
+
+@
+
+
+<<include = FALSE>>=
+
+#### make kaplan-meier model
+s_death <- 
+  with(
+    frmgham_recoded, 
+    Surv(
+      time = timedth_yrs,
+      event = death)
+    )
+
+km_death <- 
+  with(
+    frmgham_recoded, 
+    survfit(
+      s_death ~ 1)
+    )
+
+km_death_smoke <- 
+  with(
+    frmgham_recoded, 
+    survfit(
+      s_death ~ cursmoke)
+    )
+
+@
+  
+  
+<<include = FALSE>>=
+
+# The "scale" option set to 1 tells pyears() that the time is already in yrs
+# (default is to divide time by 365.25)
+py.smoke <- pyears(Surv(timedth_yrs, death) ~ cursmoke_f, 
+                   frmgham_recoded,
+                   scale = 1)[c("event", "pyears")]
+
+# Make it pretty
+simplify2array(py.smoke)
+
+@
+
+
+<<include = FALSE>>=
+
+survdiff(s_death ~ cursmoke_f, 
+         data = frmgham_recoded)
+
+@
+
+
+<<include = FALSE>>=
+
+coxph_death_smoke <- 
+  coxph(s_death ~ cursmoke, # the regression formula
+                    data = frmgham_recoded, # the data
+                    ties = "efron") # how to handle ties
+
+summary(coxph_death_smoke) # Model output
+
+@
+
+
+<<include = FALSE>>=
+
+# fit adjusted model
+coxph_death_smoke_adjusted <- 
+  coxph(s_death ~ cursmoke_f + age + sex_01_f + educ_f, 
+        data = frmgham_recoded, 
+        ties = "efron")
+
+summary(coxph_death_smoke_adjusted)
+
+@
+
+
+<<include = FALSE, cache = TRUE>>=
+
+cox_time_death_smoke_factored <- 
+  coxph(Surv(timedth_yrs, death) ~ 
+          cursmoke_f + 
+          age + 
+          sex_01_f + 
+          educ_f + 
+          tt(cursmoke) +
+          tt(age) +
+          tt(sex_01) +
+          tt(as.integer(educ_f == 2)) +
+          tt(as.integer(educ_f == 3)) +
+          tt(as.integer(educ_f == 4)), 
+        data = frmgham_recoded, 
+        method = "efron",
+        tt = function(x,t,...) x*t)
+
+summary(cox_time_death_smoke_factored)
+
+@
+
+
+<<include = FALSE, cache = TRUE>>=
+
+cox_time_death_smoke_not_factored <- 
+  coxph(Surv(timedth_yrs, death) ~ 
+          cursmoke + 
+          age + 
+          sex_01 + 
+          factor(educ) + 
+          tt(cursmoke) +
+          tt(age) +
+          tt(sex_01) +
+          tt(as.integer(educ == 2)) +
+          tt(as.integer(educ == 3)) +
+          tt(as.integer(educ == 4)), 
+        data = frmgham_recoded, 
+        method = "efron",
+        tt = function(x,t,...) x*t)
+
+summary(cox_time_death_smoke_not_factored)
+
+@
 
 \fi
-
-\pagebreak
 
 \section*{Questions}
 
@@ -275,6 +474,7 @@ q6table <-
 
 @
 
+
 <<tidy=TRUE, echo = FALSE, results ='asis'>>=
 # Q2: Convert the data.frame into a latex table
 print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA."), table.placement = "H", caption.placement = "top", caption.width = "10cm", include.rownames = FALSE)
@@ -288,28 +488,232 @@ print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates 
 
 \section*{Question 1}
 
+\ifdraft
+
+Using the Kaplan-Meier plots, graphically assess the relationship between baseline smoking status and time to death. \textbf{Briefly interpret what you see.} In 1-2 sentences describe the limitations of this approach. [{\ul{include the graph}}, labeled \textbf{Figure 1}] \textbf{(10 points)}
+
+\fi
+
+Figure 1. Kaplan-Meier Survival Estimates by Current Smoking Status
+
+<<include = FALSE>>=
+
+# autoplot(km_death_smoke)
+
+# plot Kaplan-Meier survival curve for the overall cohort
+km_surv_plot <- 
+  ggsurvplot(
+  km_death, 
+  data = frmgham_recoded, 
+  title = "Kaplan-Meier Survival Estimates Overall", 
+  xlab = "Time (years)", 
+  ylab = "Survival Probability", 
+  censor.shape = 124,
+  font.family = "Arial", 
+  ggtheme = theme_bw()
+  ) 
+
+km_surv_plot
+
+@
+
+
+<<include = FALSE>>=
+
+# autoplot(km_death_smoke)
+
+# plot Kaplan-Meier survival curve by smoking status
+km_surv_plot_smoke <- 
+  ggsurvplot(
+  km_death_smoke, 
+  data = frmgham_recoded, 
+  title = "Kaplan-Meier Survival Estimates by Current Smoking Status", 
+  xlab = "Time (years)", 
+  ylab = "Survival Probability", 
+  legend = c(0.18, 0.1),
+  legend.labs = c("Not current smoker", "Current smoker"), 
+  censor.shape = 124,
+  font.family = "Arial", 
+  ggtheme = theme_bw()
+  ) 
+
+@
+
+
+<<include = TRUE, echo - FALSE>>=
+
+km_surv_plot_smoke$plot + theme(plot.title = element_text(hjust = 0.5))
+
+@
+
+
+
 \pagebreak
 
 \section*{Question 2}
+
+\ifdraft
+
+\textbf{Referring to the code from lecture}, are you able to calculate the overall median survival time in this case? If so, provide an estimate of this quantity, if not, describe why and provide an estimate of a percentile of survival time (of your choice). Interpret the quantity that you estimated. \textbf{(20 points)}
+
+<<>>=
+
+quantile(km_death, probs=c(0.25,0.5,0.75))
+
+summary(km_death)
+
+
+@
+
+\fi
+
+We cannot calculate the overall median survival time in this case because less than half of this sample had died by the end of the study.  In other words, over half of the observations are right-censored, and thus the true median survival time is in that majority of unobserved survival times and thus unknown.  As over 25\% of the sample did die over the course of the study, however, we can estimate the 25th percentile of survival time for the cohort, the first time point at which at least 25\% of the sample had died and 75\% remained alive, which was 19.30 years.  In other words, 19.30 years after the start of the study, that last person who needed to die to bring the total percentage of the cohort dead to above 25\%, did.
+
+The 25th survival percentile among current nonsmokers was 19.76 years, and the 25th survival percentile among current smokers was 19.02 years.  In other words, among members of the cohort who were current nonsmokers at the beginning of the study, the first time at which at least 25\% of them had died (and 75\% or fewer had not) was 19.76 years.  Similarly, the first time at which at least 25\% of the members of the cohort who were current smokers at the beginning of the study had died was 19.02 years.
+
+
+<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+
+km_death_smoke_summary <- 
+  summary(km_death_smoke)
+
+# columns we want from the Kaplan-Meier table
+keep.cols <- 
+  c("time",
+    "n.risk",
+    "n.event",
+    "n.censor",
+    "surv",
+    "std.err",
+    "upper",
+    "lower")
+
+# pick off the columns we want
+km_death_smoke_table <- 
+  sapply(km_death_smoke_summary[keep.cols],
+         cbind)
+
+print(xtable(km_death_smoke_table), round = 4, tabular.environment = 'longtable', floating = FALSE)
+
+@
+
+
+<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+
+km_death_summary <- 
+  summary(km_death)
+
+# columns we want from the Kaplan-Meier table
+keep.cols <- 
+  c("time",
+    "n.risk",
+    "n.event",
+    "n.censor",
+    "surv",
+    "std.err",
+    "upper",
+    "lower")
+
+# pick off the columns we want
+km_death_table <- 
+  sapply(km_death_summary[keep.cols],
+         cbind)
+
+print(xtable(km_death_table), round = 4, tabular.environment = 'longtable')
+
+@
+
 
 \pagebreak
 
 \section*{Question 3}
 
+\ifdraft
+
+Answer the following questions about the log-rank test: \textbf{(10 points total)}
+  \begin{enumerate}
+    \item Describe the specific null and alternative hypotheses that the log-rank test is considering here.
+    \item What do you conclude from this test (use 5\% significance criteria)? List a limitation of the inference that you obtain from the log-rank test.
+  \end{enumerate}
+
+\fi
+
 \pagebreak
 
 \section*{Question 4}
+
+\ifdraft
+
+Answer the following questions about the Cox models estimated above: \textbf{(20 points total)}
+  \begin{enumerate}
+    \item Why do we use specialized methods for survival analysis (instead of linear or logistic regression, for example)? (Hint: See readings from Vittinghoff et al. 2012 text.)
+    \item What are the advantages of the Cox model over other survival analysis methods? What is a potential disadvantage of the Cox model?
+    \item What assumptions, if any, does the standard \textbf{Cox} proportional hazards model make?
+    \item Compare the test of the smoking-mortality association between the log-rank test and the likelihood ratio test from the \ul{unadjusted} Cox proportional hazards model. What do you observe? Between these two analytic approaches, which one would you prefer, and why?
+  \end{enumerate}
+
+\fi
 
 \pagebreak
 
 \section*{Question 5}
 
+\ifdraft
+
+Write the equation for the log-hazard function for the \textit{adjusted} model you estimated. \textbf{Clearly define all functions, terms (covariates), and parameters in the model. (20 points)}
+
+\fi
+
 \pagebreak
 
 \section*{Question 6}
 
+\ifdraft
+
+Complete the following table. How would you interpret the parameter estimate that compares smokers to non-smokers in the \textbf{adjusted model}? What measure of association common in epidemiologic research does this correspond to? \textbf{(10 points)}
+
+\fi
+
+
+<<include=FALSE>>=
+
+# Make a data.frame with the results
+q6table <- 
+  tibble(
+   Smoker = 
+     c("No", 
+       "Yes"), 
+   Events = 
+     c("", 
+       ""), 
+   `Follow-Up Time (years)` = 
+     c("", 
+       ""), 
+   `Crude HR (95% CI)` = 
+     c("", 
+       ""), 
+   `Adjusted HR (95% CI)` = 
+     c("", 
+       "") 
+   ) 
+
+@
+
+
+<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+# Q2: Convert the data.frame into a latex table
+print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA."), table.placement = "H", caption.placement = "top", caption.width = "10cm", include.rownames = FALSE)
+
+@
+  
 \pagebreak
 
 \section*{Question 7}
+
+\ifdraft
+
+Based on the model that included covariate-by-time interactions, is there evidence for a violation of the proportional hazards assumption in any of the variables? Indicate how you arrived at your conclusion. \ul{In 1-2 sentences} describe in general how you would account for any violations in the proportional hazards assumption (ignoring whether or not there were significant differences here). \textbf{(10 points)}
+
+\fi
 
 \end{document}
