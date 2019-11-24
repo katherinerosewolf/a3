@@ -126,7 +126,7 @@ Adapting the code presented in the lecture, and the additional piece below, comp
 2. Recode `status` so that death = 1 and censored = 0.   
 3. Use `Surv()` to set up your outcome object.   
 4. Use `survfit` with `conf.type = "log-log"` to estimate the K-M survival function.   
-5. Plot the K-M survival curve using `plot(survival_object, bty = "l")`   
+5. Plot the K-M survival curve using `plot(survival\_object, bty = "l")`   
 6. Estimate the median survival time using the `quantile` function.   
   
 <<include = TRUE>>=
@@ -138,6 +138,13 @@ s_death <-
     Surv(
       time = timedth_yrs,
       event = death)
+    )
+
+km_death <- 
+  with(
+    frmgham_recoded, 
+    survfit(
+      s_death ~ 1)
     )
 
 km_death_smoke <- 
@@ -269,163 +276,6 @@ summary(cox_time_death_smoke_not_factored)
 
 \else
 
-<<include = FALSE>>=
-
-load("frmgham_recoded.Rdata")
-library(survival)
-
-# create a single-record (retain 1st observation)
-frmgham_recoded <- 
-  frmgham_recoded[which(frmgham_recoded$period == 1),]
-
-# make death into a factor
-frmgham_recoded <- 
-  frmgham_recoded %>% 
-  mutate(death_f = factor(death))
-
-# make cursmoke into a factor
-frmgham_recoded <- 
-  frmgham_recoded %>% 
-  mutate(cursmoke_f = factor(cursmoke))
-
-# fix sex so that male is 0 and female is 1
-frmgham_recoded <- 
-  frmgham_recoded %>% 
-  mutate(sex_01 = sex - 1)
-
-# fix sex so that male is 0 and female is 1 and a factor
-frmgham_recoded <- 
-  frmgham_recoded %>% 
-  mutate(sex_01_f = factor(sex - 1))
-
-# make education into a factor
-frmgham_recoded <- 
-  frmgham_recoded %>% 
-  mutate(educ_f = factor(educ))
-
-@
-
-
-<<include = FALSE>>=
-
-#### make kaplan-meier model
-s_death <- 
-  with(
-    frmgham_recoded, 
-    Surv(
-      time = timedth_yrs,
-      event = death)
-    )
-
-km_death <- 
-  with(
-    frmgham_recoded, 
-    survfit(
-      s_death ~ 1)
-    )
-
-km_death_smoke <- 
-  with(
-    frmgham_recoded, 
-    survfit(
-      s_death ~ cursmoke)
-    )
-
-@
-  
-  
-<<include = FALSE>>=
-
-# The "scale" option set to 1 tells pyears() that the time is already in yrs
-# (default is to divide time by 365.25)
-py.smoke <- pyears(Surv(timedth_yrs, death) ~ cursmoke_f, 
-                   frmgham_recoded,
-                   scale = 1)[c("event", "pyears")]
-
-# Make it pretty
-simplify2array(py.smoke)
-
-@
-
-
-<<include = FALSE>>=
-
-survdiff(s_death ~ cursmoke_f, 
-         data = frmgham_recoded)
-
-@
-
-
-<<include = FALSE>>=
-
-coxph_death_smoke <- 
-  coxph(s_death ~ cursmoke, # the regression formula
-                    data = frmgham_recoded, # the data
-                    ties = "efron") # how to handle ties
-
-summary(coxph_death_smoke) # Model output
-
-@
-
-
-<<include = FALSE>>=
-
-# fit adjusted model
-coxph_death_smoke_adjusted <- 
-  coxph(s_death ~ cursmoke_f + age + sex_01_f + educ_f, 
-        data = frmgham_recoded, 
-        ties = "efron")
-
-summary(coxph_death_smoke_adjusted)
-
-@
-
-
-<<include = FALSE, cache = TRUE>>=
-
-cox_time_death_smoke_factored <- 
-  coxph(Surv(timedth_yrs, death) ~ 
-          cursmoke_f + 
-          age + 
-          sex_01_f + 
-          educ_f + 
-          tt(cursmoke) +
-          tt(age) +
-          tt(sex_01) +
-          tt(as.integer(educ_f == 2)) +
-          tt(as.integer(educ_f == 3)) +
-          tt(as.integer(educ_f == 4)), 
-        data = frmgham_recoded, 
-        method = "efron",
-        tt = function(x,t,...) x*t)
-
-summary(cox_time_death_smoke_factored)
-
-@
-
-
-<<include = FALSE, cache = TRUE>>=
-
-cox_time_death_smoke_not_factored <- 
-  coxph(Surv(timedth_yrs, death) ~ 
-          cursmoke + 
-          age + 
-          sex_01 + 
-          factor(educ) + 
-          tt(cursmoke) +
-          tt(age) +
-          tt(sex_01) +
-          tt(as.integer(educ == 2)) +
-          tt(as.integer(educ == 3)) +
-          tt(as.integer(educ == 4)), 
-        data = frmgham_recoded, 
-        method = "efron",
-        tt = function(x,t,...) x*t)
-
-summary(cox_time_death_smoke_not_factored)
-
-@
-
 \fi
 
 \section*{Questions}
@@ -494,6 +344,65 @@ Using the Kaplan-Meier plots, graphically assess the relationship between baseli
 
 \fi
 
+<<include = FALSE>>=
+
+km_death_smoke_summary <- 
+  km_death_smoke %>% 
+  summary()
+
+# columns we want from the Kaplan-Meier table
+keep_cols_final <- 
+  c("time",
+    "n.risk",
+    "n.event",
+    "n.censor",
+    "surv",
+    "std.err",
+    "upper",
+    "lower", 
+    "strata")
+
+# pick off the columns we want
+km_death_smoke_tibble <- 
+  km_death_smoke_summary[keep_cols_final] %>% 
+  as_tibble()
+
+# pull lowest survival for smokers
+lowest_survival_smokers <- 
+  km_death_smoke_tibble %>% 
+  filter(strata == "cursmoke=1", .preserve = TRUE) %>% 
+  filter(surv == min(surv)) %>% 
+  pull(surv) %>% 
+  round(4)
+
+# pull lowest survival for nonsmokers
+lowest_survival_nonsmokers <- 
+  km_death_smoke_tibble %>% 
+  filter(strata == "cursmoke=0", .preserve = TRUE) %>% 
+  filter(surv == min(surv)) %>% 
+  pull(surv) %>% 
+  round(4)
+
+@
+
+Participants who were current smokers at the start of the study appear to have lower probabilities of survival at all time points than participants who were not current smokers at the start of the study, and the gap between the groups appears to widen slightly over the course of the study until its end at 24 years, when the probability of survival for the smokers was \Sexpr{lowest_survival_smokers*100}\% and the probability of survival for the nonsmokers was \Sexpr{lowest_survival_nonsmokers*100}\%.
+
+\vspace{2mm}
+
+Although Kaplan-Meier estimates of survival curves offer the advantages of 
+\begin{itemize}
+  \item estimating survival probabilities accurately even in the presence of censored observations during the study period, and
+  \item being nonparametric, i.e., making no assumptions about the distribution of survival times in the cohort,
+\end{itemize}
+
+major limitations of simple visual comparison of the graphs of the survival curves of the two groups include 
+
+\begin{itemize}
+  \item the failure to account or control for the effects of any covariates that might have confounded or mediated the relationship between smoking and survival time, and
+  \item the absence of a formal test of the hypothesis that the survival probabilities are systematically different between the groups over the study period (versus to the null hypothesis the apparent difference on the graph between the two curves resulted from chance alone).
+  
+\end{itemize}
+
 Figure 1. Kaplan-Meier Survival Estimates by Current Smoking Status
 
 <<include = FALSE>>=
@@ -540,12 +449,11 @@ km_surv_plot_smoke <-
 @
 
 
-<<include = TRUE, echo - FALSE>>=
+<<include = TRUE, echo = FALSE>>=
 
 km_surv_plot_smoke$plot + theme(plot.title = element_text(hjust = 0.5))
 
 @
-
 
 
 \pagebreak
@@ -556,23 +464,43 @@ km_surv_plot_smoke$plot + theme(plot.title = element_text(hjust = 0.5))
 
 \textbf{Referring to the code from lecture}, are you able to calculate the overall median survival time in this case? If so, provide an estimate of this quantity, if not, describe why and provide an estimate of a percentile of survival time (of your choice). Interpret the quantity that you estimated. \textbf{(20 points)}
 
-<<>>=
+\vspace{2mm}
 
-quantile(km_death, probs=c(0.25,0.5,0.75))
+<<include = FALSE>>=
 
-summary(km_death)
+death_all_25_percentile <- 
+  round(quantile(km_death, probs=c(0.2500), tolerance = 0.0000001)$quantile, 2)
 
+death_nonsmoke_25_percentile <- 
+  round(quantile(km_death_smoke, 
+                 probs=c(0.2500), 
+                 tolerance = 0.0000001)$quantile[1], 2)
+
+death_smoke_25_percentile <- 
+  round(quantile(km_death_smoke, 
+                 probs=c(0.2500), 
+                 tolerance = 0.0000001)$quantile[2], 2)
 
 @
 
 \fi
 
-We cannot calculate the overall median survival time in this case because less than half of this sample had died by the end of the study.  In other words, over half of the observations are right-censored, and thus the true median survival time is in that majority of unobserved survival times and thus unknown.  As over 25\% of the sample did die over the course of the study, however, we can estimate the 25th percentile of survival time for the cohort, the first time point at which at least 25\% of the sample had died and 75\% remained alive, which was 19.30 years.  In other words, 19.30 years after the start of the study, that last person who needed to die to bring the total percentage of the cohort dead to above 25\%, did.
+We cannot calculate the overall median survival time in this case because less than half of this sample had the event (death) by the end of the study.  (This dataset has no censored observations except for those right-censored at the end of the study, so the the number of participants observed to have died in this dataset equals the number who did actually die during the study period.)  In other words, over half of the observations are right-censored, and thus the true median survival time is somewhere in that majority of unobserved full survival times and unknown to us.  As over 25\% of the cohort did die over the course of the study, however, we can estimate the \textbf{25th percentile of survival time}, the first time point at which at least 25\% of the cohort had died and 75\% or less of the cohort remained alive, which was \textbf{\Sexpr{death_all_25_percentile}} years.  
 
-The 25th survival percentile among current nonsmokers was 19.76 years, and the 25th survival percentile among current smokers was 19.02 years.  In other words, among members of the cohort who were current nonsmokers at the beginning of the study, the first time at which at least 25\% of them had died (and 75\% or fewer had not) was 19.76 years.  Similarly, the first time at which at least 25\% of the members of the cohort who were current smokers at the beginning of the study had died was 19.02 years.
+\vspace{2mm}
+
+(For another dataset containing censored observations throughout the study period instead of only at the end, a more accurate wording of the above might be "the first time point at which the probability of being dead in this cohort is estimated to be at least 25\%.  Both of those interpretations assume that all participants start counting follow-up time at the same time, whether in real or statistical time, which appears true for this dataset since all study entry times are 0.)
+
+\vspace{2mm}
+
+In other words, in this specific cohort with no censored observations until the end of the study and identical times of entry among all partiicpants, that last person who needed to die to bring the total percentage of the cohort dead to or above 25\% did so \Sexpr{death_all_25_percentile} years after the start of the study.
+
+\vspace{2mm}
+
+(The 25th percentile of survival time among current nonsmokers was \Sexpr{death_nonsmoke_25_percentile} years, and the 25th percentile of survival time among current smokers was \Sexpr{death_smoke_25_percentile} years.  In other words, among members of the cohort who were nonsmokers at the beginning of the study, the first time at which at least 25\% of them had died was \Sexpr{death_nonsmoke_25_percentile} years after the start of the study.  Similarly, the first time at which at least 25\% of the members of the cohort who were smokers at the beginning of the study had died was \Sexpr{death_smoke_25_percentile} years after the start of the study.)
 
 
-<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+<<include=FALSE>>=
 
 km_death_smoke_summary <- 
   summary(km_death_smoke)
@@ -593,12 +521,12 @@ km_death_smoke_table <-
   sapply(km_death_smoke_summary[keep.cols],
          cbind)
 
-print(xtable(km_death_smoke_table), round = 4, tabular.environment = 'longtable', floating = FALSE)
+# print(xtable(km_death_smoke_table), round = 4, tabular.environment = 'longtable', floating = FALSE)
 
 @
 
 
-<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+<<include = FALSE>>=
 
 km_death_summary <- 
   summary(km_death)
@@ -619,7 +547,7 @@ km_death_table <-
   sapply(km_death_summary[keep.cols],
          cbind)
 
-print(xtable(km_death_table), round = 4, tabular.environment = 'longtable')
+# print(xtable(km_death_table), round = 4, tabular.environment = 'longtable', floating = TRUE)
 
 @
 
@@ -637,6 +565,43 @@ Answer the following questions about the log-rank test: \textbf{(10 points total
   \end{enumerate}
 
 \fi
+
+\subsection*{Sub-Question 1}
+
+The null hypothesis for the log-rank test here is that the survival curve for the smokers is equivalent to that for the nonsmokers.  More specifically, the null hypothesis is that the probability of survival for a nonsmoker is the same as the probability of survival for a smoker at all times during the study period, or formally:
+
+$$ H_0: S_1(t) = S_2(t) \: \forall(t) $$
+
+where $S_k(t)$ is the survival probability for a member of group $k$ at time $t$.  (Here, $k=1$ designates the nonsmoking group and $k=2$ designates the smoking group.)
+
+\vspace{2mm}
+
+The alternative hypothesis is that the survival curve for at least one group is different than the others at some time during the study period, or, formally:
+
+$$ \exists (t) \: S_1(t) \neq S_2(t) $$
+
+\subsection*{Sub-Question 2}
+
+<<>>=
+
+log_rank_results <- 
+  survdiff(
+    Surv(time = timedth_yrs,
+         event = death) ~ cursmoke, 
+    data = frmgham_recoded)
+
+p_val_sdf <- 
+  round(1 - pchisq(log_rank_results$chisq, 
+                   length(log_rank_results$n) - 1), 
+        2)
+
+@
+
+The p-value of \Sexpr{p_val_sdf} indicates that we cannot reject the null hypothesis of no difference between the smoker and nonsmoker survival curves at the 5\% significance level.
+
+\vspace{2mm}
+
+One limitation of the test is that, although it allows for censoring, it requires that censoring to be non-informative, i.e., unrelated to survival probability.  Another limitation is that, in the case of a significant result, it does not identify the time or times at which the curves differ.  A third limitation of the log-rank test is its inability to distinguish, in the presence of more than two survival curves and a significant result, which curves are different without further tests.  
 
 \pagebreak
 
