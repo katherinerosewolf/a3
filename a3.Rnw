@@ -8,11 +8,15 @@
 \usepackage{mathtools}  % for mathematical symbols
 \usepackage{bm}  % to bold mathematical symbols like betas
 \usepackage{scrextend}  % to indent subsections
-\usepackage{xltxtra,fontspec,xunicode}
+\usepackage{xltxtra}
+\usepackage{fontspec}
+\usepackage{xunicode}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{soul}  % get underlines
 \usepackage[skip=0.5\baselineskip]{caption}  % control caption printing space
 \usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amsfonts}
 
 % set fonts
 \setmainfont{Georgia}
@@ -30,8 +34,8 @@
 
 % make quick draft versus final versions
 \newif\ifdraft  % make draft command
-% \draftfalse  % one of these must be commented
-\drafttrue  % one of these must be commented
+\draftfalse  % one of these must be commented
+% \drafttrue  % one of these must be commented
 
 % end the preamble and begin the document
 \begin{document}
@@ -46,6 +50,7 @@ library(survival)
 library(survminer)
 library(ggplot2)
 library(ggfortify)
+library(kableExtra)
 
 @
 
@@ -64,7 +69,9 @@ library(ggfortify)
 
 Use the dataset \codeword{frmgham_recoded.Rdata} and code provided herein to explore the relationship between smoking status at baseline and time to death in the Framingham cohort.
 
-<<include = TRUE>>=
+\fi
+
+<<include=FALSE>>=
 
 load("frmgham_recoded.Rdata")
 library(survival)
@@ -100,6 +107,7 @@ frmgham_recoded <-
 
 @
 
+\ifdraft
 
 \vspace{2mm}
 
@@ -129,7 +137,9 @@ Adapting the code presented in the lecture, and the additional piece below, comp
 5. Plot the K-M survival curve using `plot(survival\_object, bty = "l")`   
 6. Estimate the median survival time using the `quantile` function.   
   
-<<include = TRUE>>=
+\fi
+
+<<include=FALSE>>=
 
 #### make kaplan-meier model
 s_death <- 
@@ -164,11 +174,14 @@ ggsurvplot(
 
 @
   
+\ifdraft
+  
   \item Using the code below, \textbf{calculate the number of events and number of person-years in each exposure group}:
 \end{itemize}
 
+\fi
 
-<<include = TRUE>>=
+<<include=FALSE>>=
 
 # The "scale" option set to 1 tells pyears() that the time is already in yrs
 # (default is to divide time by 365.25)
@@ -181,37 +194,54 @@ simplify2array(py.smoke)
 
 @
 
+\ifdraft
 
 \textbf{Proportional hazards modeling (Questions 3-8)}
 \begin{itemize}
   \item Referring to the code from the lecture notes, \textbf{use the log-rank test to determine if there are any differences in survival between the smoking groups}.
   
+\fi
 
-<<include = TRUE>>=
+<<include=FALSE>>=
 
 survdiff(s_death ~ cursmoke_f, 
          data = frmgham_recoded)
 
 @
 
+\ifdraft
+
   \item \textbf{Using a Cox proportional hazards regression model}, estimate the association between current smoking status (at baseline) and time to death. Estimate 2 models:
   \begin{itemize}
     \item An \textbf{unadjusted} model (only including smoking status), and
-    
-<<include = TRUE>>=
+
+\fi
+
+<<include=FALSE>>=
 
 coxph_death_smoke <- 
   coxph(s_death ~ cursmoke, # the regression formula
                     data = frmgham_recoded, # the data
                     ties = "efron") # how to handle ties
 
-summary(coxph_death_smoke) # Model output
+coxph_death_smoke_factor <- 
+  coxph(s_death ~ cursmoke_f, # the regression formula
+                    data = frmgham_recoded, # the data
+                    ties = "efron") # how to handle ties
+
+# Model output
+summary(coxph_death_smoke) 
+summary(coxph_death_smoke_factor)
 
 @
-    
+
+\ifdraft
+
     \item An \textbf{adjusted} model that also includes age (continuous), sex (binary) and education (4-category) in this model. (For nominal categorical variables, you may need to use the \codeword{factor()} operator in the formula as demonstrated in class.)
-    
-<<include = TRUE>>=
+
+\fi
+
+<<include=FALSE>>=
 
 # fit adjusted model
 coxph_death_smoke_adjusted <- 
@@ -222,12 +252,16 @@ coxph_death_smoke_adjusted <-
 summary(coxph_death_smoke_adjusted)
 
 @
-    
+
+\ifdraft
+
   \end{itemize}
   \item Estimate a model with \textbf{an interaction between linear follow-up time} and \ul{all} of the covariates in the model. \textit{(Hint: you will need to use the ‘tt()‘ function within the ‘coxph‘ command.)}
 \end{itemize}
 
-<<include = TRUE, cache = TRUE>>=
+\fi
+
+<<include=FALSE, cache=TRUE>>=
 
 cox_time_death_smoke_factored <- 
   coxph(Surv(timedth_yrs, death) ~ 
@@ -250,7 +284,7 @@ summary(cox_time_death_smoke_factored)
 @
 
 
-<<include = TRUE, cache = TRUE>>=
+<<include=FALSE, cache=TRUE>>=
 
 cox_time_death_smoke_not_factored <- 
   coxph(Surv(timedth_yrs, death) ~ 
@@ -272,11 +306,6 @@ summary(cox_time_death_smoke_not_factored)
 
 @
 
-% put only code chunks with "FALSE" here to produce final document
-
-\else
-
-\fi
 
 \section*{Questions}
 
@@ -325,7 +354,7 @@ q6table <-
 @
 
 
-<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+<<tidy=TRUE, echo=FALSE, results='asis'>>=
 # Q2: Convert the data.frame into a latex table
 print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA."), table.placement = "H", caption.placement = "top", caption.width = "10cm", include.rownames = FALSE)
 
@@ -344,7 +373,7 @@ Using the Kaplan-Meier plots, graphically assess the relationship between baseli
 
 \fi
 
-<<include = FALSE>>=
+<<include=FALSE>>=
 
 km_death_smoke_summary <- 
   km_death_smoke %>% 
@@ -403,9 +432,11 @@ major limitations of simple visual comparison of the graphs of the survival curv
   
 \end{itemize}
 
+\pagebreak
+
 Figure 1. Kaplan-Meier Survival Estimates by Current Smoking Status
 
-<<include = FALSE>>=
+<<include=FALSE>>=
 
 # autoplot(km_death_smoke)
 
@@ -427,7 +458,7 @@ km_surv_plot
 @
 
 
-<<include = FALSE>>=
+<<include=FALSE>>=
 
 # autoplot(km_death_smoke)
 
@@ -449,12 +480,11 @@ km_surv_plot_smoke <-
 @
 
 
-<<include = TRUE, echo = FALSE>>=
+<<include=TRUE, echo=FALSE>>=
 
 km_surv_plot_smoke$plot + theme(plot.title = element_text(hjust = 0.5))
 
 @
-
 
 \pagebreak
 
@@ -466,7 +496,7 @@ km_surv_plot_smoke$plot + theme(plot.title = element_text(hjust = 0.5))
 
 \vspace{2mm}
 
-<<include = FALSE>>=
+<<include=FALSE>>=
 
 death_all_25_percentile <- 
   round(quantile(km_death, probs=c(0.2500), tolerance = 0.0000001)$quantile, 2)
@@ -526,7 +556,7 @@ km_death_smoke_table <-
 @
 
 
-<<include = FALSE>>=
+<<include=FALSE>>=
 
 km_death_summary <- 
   summary(km_death)
@@ -582,7 +612,7 @@ $$ \exists (t) \: S_1(t) \neq S_2(t) $$
 
 \subsection*{Sub-Question 2}
 
-<<>>=
+<<include=FALSE>>=
 
 log_rank_results <- 
   survdiff(
@@ -597,11 +627,11 @@ p_val_sdf <-
 
 @
 
-The p-value of \Sexpr{p_val_sdf} indicates that we cannot reject the null hypothesis of no difference between the smoker and nonsmoker survival curves at the 5\% significance level.
+The p-value of \textbf{\Sexpr{p_val_sdf}} indicates that we cannot reject the null hypothesis of no difference between the smoker and nonsmoker survival curves at the 5\% significance level.
 
 \vspace{2mm}
 
-One limitation of the test is that, although it allows for censoring, it requires that censoring to be non-informative, i.e., unrelated to survival probability.  Another limitation is that, in the case of a significant result, it does not identify the time or times at which the curves differ.  A third limitation of the log-rank test is its inability to distinguish, in the presence of more than two survival curves and a significant result, which curves are different without further tests.  
+One limitation of the log-rank test is that, although it allows for censoring, it requires that censoring to be non-informative, i.e., unrelated to survival probability.  (It also requires survival probabilities to be the same regardless of the entry date into the study, i.e., that survival probabilities are not affected by factors only present at specific dates when some participants were in the study and some were not.)  Another limitation is that, in the case of a significant result, the log-rank test does not identify the time or times at which the survival curves differ.  A third limitation of the log-rank test is its inability to distinguish, in the presence of more than two survival curves and a significant result, which curves are different without further testing.  A fourth limitation is that the log-rank test does not accommodate adjustment for covariates.
 
 \pagebreak
 
@@ -619,6 +649,90 @@ Answer the following questions about the Cox models estimated above: \textbf{(20
 
 \fi
 
+\subsection*{Sub-Question 1}
+\textbf{Why do we use specialized methods for survival analysis (instead of linear or logistic regression, for example)?}
+
+\vspace{2mm}
+
+We use specialized methods for survival analysis in order to fully incorporate the information contained in varying follow-up times.  We cannot use linear regression (with survival time as the outcome) due to the right-censoring of the events of interest (e.g., disease incidence or death) frequently present in survival data, which often leaves many survival times unknown.  Worse, the missing survival times are censored informatively, meaning that whether a survival time is unknown is associated with the outcome of survival time, i.e., the longest times are the ones most likely to be missing.  Thus using linear regression on the known survival times would systematically underestimate them.  Adjusting for follow-up time can partially account for variations in follow-up time but imposes assumptions on the relationship between follow-up time and event risk (e.g., that follow-up time is associated with risk in some kind of linear manner).
+
+\vspace{2mm}
+
+We cannot use logistic regression, either, even though we are interested in the binary presence or absence of an event, because logistic regression ignores variation in follow-up times, which arises both from variation in participants' entry times into the study and from differences in survival times among participants.  Doing a simple logistic regression with event presence or absence at the end of the study as the outcome effectively ignores the information contained in the participant surivival times.  Moreover, if systematic differences exist in entry times between the groups of interest (for example, exposed participants generally entered the study later than unexposed participants), logistic regression could produce particularly biased results.  Pooled logistic regression, which looks at binary event outcomes at several times over the course of the study instead of only at the end, can help account for variations in follow-up times, but is more appropriate when events are discovered at regularly spaced intervals at which outcomes can be evaluated (e.g., study visits conducted at the same intervals for all participants) and still fails to incorporate the specific information garnered from having exact event times, producing less accurate estimates of event risk than survival analysis methods that can fully accommodate exact event times.
+
+\subsection*{Sub-Question 2}
+\textbf{What are the advantages of the Cox model over other survival analysis methods? What is a potential disadvantage of the Cox model?}
+
+\vspace{2mm}
+
+Advantages:
+The Cox model does not require us to specify the distribution of the failure times $T$, also known as the baseline hazard.  Thus the Cox model is more robust than parametric proportional hazards models because bias cannot arise from misspecification of the distribution of failure times.
+
+Disadvantage:
+One potential disadvantage of the Cox model is the decreased precision (and increased variance) in the Cox model compared to fully parametric survival models that either specify the distribution of failure times accurately or are relatively robust to misspecifications.
+
+\vspace{2mm}
+
+\subsection*{Sub-Question 3}
+\textbf{What assumptions, if any, does the standard \textit{Cox} proportional hazards model make?}
+
+\vspace{2mm}
+
+The standard Cox proportional hazards model assumes
+
+\begin{itemize}
+  \item That the covariates have multiplicative associations with the hazard (as they reside in the parametric portion of the model, in an exponent relative to the hazard), as opposed to additive or other associations;
+  \item That the hazard ratios are constant over time (the \textit{proportional hazards assumption}), i.e., that the hazard in one group is a constant multiple of the hazard of any other group throughout time;
+  \item That survival times are independent among study participants; 
+  \item That measurements and times are accurate in the dataset; and
+  \item That any censoring is uninformative, i.e., not associated with survival time.
+  
+\end{itemize}
+
+\vspace{2mm}
+
+\subsection*{Sub-Question 4}
+\textbf{Compare the test of the smoking-mortality association between the log-rank test and the likelihood ratio test from the \ul{unadjusted} Cox proportional hazards model. What do you observe? Between these two analytic approaches, which one would you prefer, and why?}
+
+\vspace{2mm}
+
+<<include=FALSE>>=
+
+# log-rank test
+log_rank <- 
+  survdiff(Surv(time = timedth_yrs,
+              event = death) ~ 
+           cursmoke_f, 
+         data = frmgham_recoded)
+
+log_rank$chisq
+
+# likelihood ratio test
+s_death <- 
+  with(
+    frmgham_recoded, 
+    Surv(
+      time = timedth_yrs,
+      event = death)
+    )
+
+coxph_death_smoke_factor <- 
+  coxph(Surv(time = timedth_yrs,
+             event = death) ~ cursmoke_f, # the regression formula
+        data = frmgham_recoded, # the data
+        ties = "efron") # how to handle ties
+
+smoke_factor_summary <- 
+  summary(coxph_death_smoke_factor)
+
+smoke_factor_summary$logtest
+
+@
+
+Both the log-rank test and the likelihood ratio test from the unadjusted Cox proportional hazards model give nearly identical results, i.e., a chi-square statistic of 2.91 on one degree of freedom ($p = 0.088$).  Thus neither rejects the null hypothesis that no systematic difference in survival times exists between current smokers and nonsmokers at the 5\% significance level.  Were I not allowed to adjust for any other covariates, like here, I would prefer the log-rank test, as it is fully nonparametric and does not presume any prior relationship between the Kaplan-Meier survival curves on which it is based and is thus more robust to a wider variety of distributions of survival times among groups.  The Cox proportional hazards model, in contrast, assumes that hazard ratios (derived from relationships among survival curves) remain constant over time between any two groups.  Were I allowed to adjust for covariates, however, I would ultimately use the likelihood ratio test from the Cox proportional hazards model or some variation of it, as the Cox model can accommodate a wider variety of covariates and thus will ultimately produce more informed and accurate estimates of the relationship between a categorical exposure and survival time outcomes.
+
+\vspace{2mm}
+
 \pagebreak
 
 \section*{Question 5}
@@ -629,6 +743,42 @@ Write the equation for the log-hazard function for the \textit{adjusted} model y
 
 \fi
 
+Equation:
+
+$$ \log(h(t|\mathbf{x}, \boldsymbol{\beta})) =  \log[h_0(t)] + \beta_1\mathbb{I}(x_1 = 1) + \beta_2 x_2 + \beta_3\mathbb{I}(x_3 = 1) + \beta_4\mathbb{I}(x_4 = 2) + \beta_5\mathbb{I}(x_4 = 3) + \beta_6\mathbb{I}(x_4 = 4) $$
+
+\vspace{2mm}
+Definitions:
+
+\begin{itemize}
+
+  \item $ \log(h(t|\mathbf{x}, \boldsymbol{\beta})) $ is the natural logarithm of the instantaneous rate (hazard) of death at time $t$ for a participant who has survived up to that time $t$, given the covariates in $ \mathbf{x} $ and coefficients in $\boldsymbol{\beta}$;
+  \item $\log(h_0(t))$ is the baseline instantaneous rate (hazard) of death at time $t$ for a participant who was not a current smoker, was zero years old, was male, had 0-11 years of education at the first examination, and survived up to time $t$;
+  \item $\mathbf{x}$ is a vector of covariates containing
+    \begin{itemize}
+      \item $x_1$, an indicator variable for smoking corresponding to the dataset variable `cursmoke`, with $x_1 = 1$ indicating that the participant was a current smoker at the first examination and $x_1 = 0$ indicating that the participant was not;
+      \item $x_2$, a continuous variable for age of the participant at the first examination in years;
+      \item $x_3$, an indicator variable corresponding to the recoded variable `female` derived from the dataset variable `sex`, with $x_3 = 1$ indicating a female participant (originally `sex = 2`) and $x_3 = 0$ indicating a male participant (originally `sex = 1`);
+      \item $x_4$, a four-category categorical variable corresponding to the dataset variable `educ`, where
+        \begin{itemize}
+          \item $x_4 = 1$ corresponds to the dataset variable `educ = 1`, indicating that the participant had 0-11 years of education (in this equation, this condition is the reference condition and subsumed in the baseline hazard term $\log[h_0(t)]$ tercept term $x_0 = 1$);
+          \item $x_4 = 2$ corresponds to the dataset variable value `educ = 2`, indicating that the participant had a high school diploma or GED;
+          \item $x_4 = 3$ corresponds to the dataset variable value `educ = 3`, indicating that the participant had some college or vocational school;
+          \item $x_4 = 4$ corresponds to the dataset variable value `educ = 4`, indicating that the participant had a college degree or more;
+      \end{itemize}
+    \end{itemize}
+  \item $\mathbb{I}()$ is the formula for an indicator variable, which equals 1 if the equation inside the parentheses is true and 0 if it is not (used to create indicator variables for each non-reference level of the categorical variables in $\mathbf{x}$);  
+  \item $\boldsymbol{\beta}$ is a vector of coefficients including
+    \begin{itemize}
+      \item $\beta_1$ is the log hazard ratio comparing the hazard of death for a participant who was a current smoker at the first examination to the hazard of death for a participant who was not, holding the values of all other variables constant;
+      \item $\beta_2$ is the log hazard ratio for a one-year increase in age, holding the values of all other variables constant,
+      \item $\beta_3$ is the log hazard ratio comparing the hazard of death for a participant who was a female (in the numerator) to the hazard of death for a participant who was male (in the denominator) at the first examination, holding the values of all other variables constant;
+      \item $\beta_4$ is the log hazard ratio comparing the hazard of death for a participant who had a high school diploma or GED (in the numerator) to the hazard of death for a participant who had 0-11 years of education (in the denominator) at the first examination, holding the values of all other variables constant;
+      \item $\beta_5$ is the log hazard ratio comparing the hazard of death for a participant who had some college or vocational school (in the numerator) to the hazard of death for a participant who had 0-11 years of education (in the denominator) at the first examination, holding the values of all other variables constant;
+      \item $\beta_6$ is the log hazard ratio comparing the hazard of death for a participant who had some college or vocational school (in the numerator) to the hazard of death for a participant who had a college degree or more (in the denominator) at the first examination, holding the values of all other variables constant.
+    \end{itemize}
+  \end{itemize}
+      
 \pagebreak
 
 \section*{Question 6}
@@ -638,6 +788,64 @@ Write the equation for the log-hazard function for the \textit{adjusted} model y
 Complete the following table. How would you interpret the parameter estimate that compares smokers to non-smokers in the \textbf{adjusted model}? What measure of association common in epidemiologic research does this correspond to? \textbf{(10 points)}
 
 \fi
+
+<<include=FALSE>>=
+
+
+
+# Make it pretty
+events_person_years <- 
+  simplify2array(py.smoke)
+
+# make it a tibble
+events_person_years_tibble <- 
+  events_person_years %>% 
+  as_tibble(rownames = "cursmoke") 
+
+# get number of events
+events_vector <- 
+  events_person_years_tibble %>% 
+  pull(event) %>% 
+  as.integer()
+
+# get number of person-years
+person_years_vector <- 
+  events_person_years_tibble %>% 
+  pull(pyears)
+
+# get hazard ratios
+hr_crude <- 
+  summary(coxph_death_smoke_factor)$coef[2]
+hr_adjusted <- 
+  summary(coxph_death_smoke_adjusted)$coef[1,2]
+
+# get 95% confidence intervals
+crude_ci <- 
+  summary(coxph_death_smoke_factor)$conf.int[3:4]
+adjusted_ci <- 
+  summary(coxph_death_smoke_adjusted)$conf.int[1,3:4]
+  
+hr_ci_crude <- 
+  c("1. (reference)",
+    paste0(round(summary(coxph_death_smoke_factor)$coef[2], 3),
+           " (",
+           round(summary(coxph_death_smoke_factor)$conf.int[3], 3), 
+           "—", 
+           round(summary(coxph_death_smoke_factor)$conf.int[4], 3), 
+           ")") 
+  )
+
+hr_ci_adj <- 
+  c("1. (reference)",
+    paste0(round(summary(coxph_death_smoke_adjusted)$coef[1,2], 3),
+           " (",
+           round(summary(coxph_death_smoke_adjusted)$conf.int[1,3], 3), 
+           "—", 
+           round(summary(coxph_death_smoke_adjusted)$conf.int[1,4], 3), 
+           ")") 
+  )
+    
+@
 
 
 <<include=FALSE>>=
@@ -649,28 +857,26 @@ q6table <-
      c("No", 
        "Yes"), 
    Events = 
-     c("", 
-       ""), 
+     events_vector, 
    `Follow-Up Time (years)` = 
-     c("", 
-       ""), 
+     person_years_vector, 
    `Crude HR (95% CI)` = 
-     c("", 
-       ""), 
+     hr_ci_crude, 
    `Adjusted HR (95% CI)` = 
-     c("", 
-       "") 
+     hr_ci_adj 
    ) 
 
 @
 
 
-<<tidy=TRUE, echo = FALSE, results ='asis'>>=
+<<tidy=TRUE, echo=FALSE, results ='asis'>>=
 # Q2: Convert the data.frame into a latex table
 print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA."), table.placement = "H", caption.placement = "top", caption.width = "10cm", include.rownames = FALSE)
 
 @
-  
+
+The hazard of death during the study for a participant who was a current smoker at the start of the study was 1.404 times (95\% confidence interval: 1.262, 1.562) that of a participant who was not a current smoker at the start of the study after adjusting for age, sex, and level of education.  Hazard ratios, in general, correspond to incidence rate ratios.  (See the following reference for a discussion of why hazard ratios do not always approximate relative risks well: \textit{Sutradhar R and Austin PC. Relative rates not relative risks: addressing a widespread misinterpretation of hazard ratios. Annals of Epidemiology. 2018;28(1):54-57. doi:10.1016/j.annepidem.2017.10.014.})  That said, in the absence of competing events, rate ratios can approximate risk ratios.
+
 \pagebreak
 
 \section*{Question 7}
@@ -680,5 +886,95 @@ print(xtable(q6table, caption = "Crude and adjusted hazard ratio (HR) estimates 
 Based on the model that included covariate-by-time interactions, is there evidence for a violation of the proportional hazards assumption in any of the variables? Indicate how you arrived at your conclusion. \ul{In 1-2 sentences} describe in general how you would account for any violations in the proportional hazards assumption (ignoring whether or not there were significant differences here). \textbf{(10 points)}
 
 \fi
+
+The sex variable appears to violate the proportional hazards assumption.  To evaluate violations of the proportional hazards assumption in the variables, I reran the adjusted model, adding interactions with time for all the covariates:
+
+\begin{equation*}
+\begin{split} 
+\log(h(t|\mathbf{x}, \boldsymbol{\beta})) = \log[h_0(t)] + \beta_1\mathbb{I}(x_1 = 1) + \beta_2 x_2 + \beta_3\mathbb{I}(x_3 = 1) + \beta_4\mathbb{I}(x_4 = 2) + \beta_5\mathbb{I}(x_4 = 3) + \beta_6\mathbb{I}(x_4 = 4) \; + \\ \beta_7\mathbb{I}(x_1 = 1)\times t + \beta_8x_2\times t + \beta_9\mathbb{I}(x_3 = 1)\times t + \beta_{10}\mathbb{I}(x_4 = 2)\times t + \beta_{11}\mathbb{I}(x_4 = 3)\times t + \beta_{12}\mathbb{I}(x_4 = 4)\times t 
+\end{split} 
+\end{equation*}
+
+All functions, covariates, and parameters have the same defnitions as in question 5, with the addition of the coefficients $\beta_7, \beta_8, \ldots, \beta_12$ to model possible interactions with time.  I then produced the table below, which shows a significant interaction at the 5\% significance level ($p = 0.026$) for the interaction between sex and time.  I then conducted a global likelihood ratio test comparing the log likelihood of the adjusted model with the time interaction to the same model without the time interaction, obtaining a significant chi-square value of 4.148 with one degree of freedom ($p = 0.042$), indicating that the interaction improves the model accuracy.
+
+\vspace{2mm}
+
+To account for a violation of the proportional hazards assumption: If the violation were in a confounder (e.g., in sex here), I would either include the time interaction(s) with the confounder in the model to account for its effects on the exposure-outcome association, or, if I could categorize the confounder easily and did not care about evaluating its association with the outcome, I would estimate a model stratified by the levels of that confounder to allow for a different baseline hazard function in each stratum.  If the violation were in the exposure of interest (e.g., in current smoking here), I would include all the time interactions in the model and report time-specific instead of overall effects.
+
+<<include=FALSE, cache=TRUE>>=
+
+frmgham_recoded_no_missing <- 
+  frmgham_recoded %>% 
+  dplyr::select(cursmoke, cursmoke_f, age, sex, sex_01, sex_01_f, educ, educ_f, timedth_yrs, death) %>%
+  na.omit()
+
+# interaction with time only
+cox_time_sex_only_factored <- 
+  coxph(Surv(timedth_yrs, death) ~ 
+          cursmoke_f + 
+          age + 
+          sex_01_f + 
+          educ_f + 
+          tt(sex_01), 
+        data = frmgham_recoded_no_missing, 
+        method = "efron",
+        tt = function(x,t,...) x*t)
+
+# interaction with no time
+cox_adjusted_factored_like_time <- 
+  coxph(Surv(timedth_yrs, death) ~ 
+          cursmoke_f + 
+          age + 
+          sex_01_f + 
+          educ_f, 
+        data = frmgham_recoded_no_missing, 
+        method = "efron")
+
+summary(cox_time_sex_only_factored)
+summary(coxph_death_smoke_adjusted)
+summary(cox_adjusted_factored_like_time)
+
+2*(cox_time_sex_only_factored$loglik - cox_adjusted_factored_like_time$loglik)[2]
+
+# chi-square 4.147921, p = .041686
+
+2*(cox_time_death_smoke_factored$loglik - cox_time_sex_only_factored$loglik)[2]
+
+anova(cox_time_death_smoke_factored, 
+      cox_time_sex_only_factored) # Global LR test for time ixn w/ Karnofsky status
+
+logLik(cox_time_sex_only_factored)
+logLik(cox_adjusted_factored_like_time)
+
+time_table <- 
+  summary(cox_time_death_smoke_factored)$coef %>% 
+  as_tibble(rownames = "Covariate") %>% 
+  mutate(Covariate = c("Current Smoker", 
+                       "Age", 
+                       "Female Sex", 
+                       "Education: High School", 
+                       "Education: Some College", 
+                       "Education: College Degree", 
+                       "Current Smoker by Time", 
+                       "Age by Time Interaction", 
+                       "Female by Time Interaction", 
+                       "Education: High School by Time", 
+                       "Education: Some College by Time", 
+                       "Education: College Degree by Time")) %>% 
+  select("Covariate", "Beta" = "coef", "e^Beta" =  `exp(coef)`, `Standard Error` = `se(coef)`, z, `p` = `Pr(>|z|)`)
+
+@
+
+
+<<echo=FALSE, results="asis">>=
+
+# time_table %>%
+#   kable(., escape = F, booktabs = T, linesep = "", align = "c", col.names = c("Covariate", "Beta", "e^Beta", "Standard Error (Beta)", "z", "p"), digits = 3) %>% 
+#   kable_styling()
+
+print(xtable(time_table, caption = "Estimates of associations between baseline smoking status and mortality including adjustment for potential interactions with time. Framingham Cohort Study. 1948-1972, Framingham, MA."), table.placement = "H", caption.placement = "top", caption.width = "11cm", include.rownames = FALSE)
+
+@
+
 
 \end{document}

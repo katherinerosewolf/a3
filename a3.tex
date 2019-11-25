@@ -58,11 +58,15 @@
 \usepackage{mathtools}  % for mathematical symbols
 \usepackage{bm}  % to bold mathematical symbols like betas
 \usepackage{scrextend}  % to indent subsections
-\usepackage{xltxtra,fontspec,xunicode}
+\usepackage{xltxtra}
+\usepackage{fontspec}
+\usepackage{xunicode}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{soul}  % get underlines
 \usepackage[skip=0.5\baselineskip]{caption}  % control caption printing space
 \usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amsfonts}
 
 % set fonts
 \setmainfont{Georgia}
@@ -80,8 +84,8 @@
 
 % make quick draft versus final versions
 \newif\ifdraft  % make draft command
-% \draftfalse  % one of these must be commented
-\drafttrue  % one of these must be commented
+\draftfalse  % one of these must be commented
+% \drafttrue  % one of these must be commented
 
 % end the preamble and begin the document
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -105,44 +109,11 @@
 
 Use the dataset \codeword{frmgham_recoded.Rdata} and code provided herein to explore the relationship between smoking status at baseline and time to death in the Framingham cohort.
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{load}\hlstd{(}\hlstr{"frmgham_recoded.Rdata"}\hlstd{)}
-\hlkwd{library}\hlstd{(survival)}
+\fi
 
-\hlcom{# create a single-record (retain 1st observation)}
-\hlstd{frmgham_recoded} \hlkwb{<-}
-  \hlstd{frmgham_recoded[}\hlkwd{which}\hlstd{(frmgham_recoded}\hlopt{$}\hlstd{period} \hlopt{==} \hlnum{1}\hlstd{),]}
 
-\hlcom{# make death into a factor}
-\hlstd{frmgham_recoded} \hlkwb{<-}
-  \hlstd{frmgham_recoded} \hlopt{%>%}
-  \hlkwd{mutate}\hlstd{(}\hlkwc{death_f} \hlstd{=} \hlkwd{factor}\hlstd{(death))}
 
-\hlcom{# make cursmoke into a factor}
-\hlstd{frmgham_recoded} \hlkwb{<-}
-  \hlstd{frmgham_recoded} \hlopt{%>%}
-  \hlkwd{mutate}\hlstd{(}\hlkwc{cursmoke_f} \hlstd{=} \hlkwd{factor}\hlstd{(cursmoke))}
-
-\hlcom{# fix sex so that male is 0 and female is 1}
-\hlstd{frmgham_recoded} \hlkwb{<-}
-  \hlstd{frmgham_recoded} \hlopt{%>%}
-  \hlkwd{mutate}\hlstd{(}\hlkwc{sex_01} \hlstd{= sex} \hlopt{-} \hlnum{1}\hlstd{)}
-
-\hlcom{# fix sex so that male is 0 and female is 1 and a factor}
-\hlstd{frmgham_recoded} \hlkwb{<-}
-  \hlstd{frmgham_recoded} \hlopt{%>%}
-  \hlkwd{mutate}\hlstd{(}\hlkwc{sex_01_f} \hlstd{=} \hlkwd{factor}\hlstd{(sex} \hlopt{-} \hlnum{1}\hlstd{))}
-
-\hlcom{# make education into a factor}
-\hlstd{frmgham_recoded} \hlkwb{<-}
-  \hlstd{frmgham_recoded} \hlopt{%>%}
-  \hlkwd{mutate}\hlstd{(}\hlkwc{educ_f} \hlstd{=} \hlkwd{factor}\hlstd{(educ))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
+\ifdraft
 
 \vspace{2mm}
 
@@ -172,340 +143,60 @@ Adapting the code presented in the lecture, and the additional piece below, comp
 5. Plot the K-M survival curve using `plot(survival\_object, bty = "l")`   
 6. Estimate the median survival time using the `quantile` function.   
   
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#### make kaplan-meier model}
-\hlstd{s_death} \hlkwb{<-}
-  \hlkwd{with}\hlstd{(}
-    \hlstd{frmgham_recoded,}
-    \hlkwd{Surv}\hlstd{(}
-      \hlkwc{time} \hlstd{= timedth_yrs,}
-      \hlkwc{event} \hlstd{= death)}
-    \hlstd{)}
+\fi
 
-\hlstd{km_death} \hlkwb{<-}
-  \hlkwd{with}\hlstd{(}
-    \hlstd{frmgham_recoded,}
-    \hlkwd{survfit}\hlstd{(}
-      \hlstd{s_death} \hlopt{~} \hlnum{1}\hlstd{)}
-    \hlstd{)}
 
-\hlstd{km_death_smoke} \hlkwb{<-}
-  \hlkwd{with}\hlstd{(}
-    \hlstd{frmgham_recoded,}
-    \hlkwd{survfit}\hlstd{(}
-      \hlstd{s_death} \hlopt{~} \hlstd{cursmoke)}
-    \hlstd{)}
-
-\hlkwd{ggsurvplot}\hlstd{(}
-  \hlstd{km_death_smoke,}
-  \hlkwc{data} \hlstd{= frmgham_recoded,}
-  \hlkwc{title} \hlstd{=} \hlstr{"Kaplan-Meier Survival Estimates by Current Smoking Status"}\hlstd{,}
-  \hlkwc{xlab} \hlstd{=} \hlstr{"Time (years)"}\hlstd{,}
-  \hlkwc{ylab} \hlstd{=} \hlstr{"Survival Probability"}
-\hlstd{)}
-\end{alltt}
-\end{kframe}
-\includegraphics[width=\maxwidth]{figure/unnamed-chunk-3-1} 
-
-\end{knitrout}
+  
+\ifdraft
   
   \item Using the code below, \textbf{calculate the number of events and number of person-years in each exposure group}:
 \end{itemize}
 
+\fi
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# The "scale" option set to 1 tells pyears() that the time is already in yrs}
-\hlcom{# (default is to divide time by 365.25)}
-\hlstd{py.smoke} \hlkwb{<-} \hlkwd{pyears}\hlstd{(}\hlkwd{Surv}\hlstd{(timedth_yrs, death)} \hlopt{~} \hlstd{cursmoke_f,}
-                   \hlstd{frmgham_recoded,}
-                   \hlkwc{scale} \hlstd{=} \hlnum{1}\hlstd{)[}\hlkwd{c}\hlstd{(}\hlstr{"event"}\hlstd{,} \hlstr{"pyears"}\hlstd{)]}
 
-\hlcom{# Make it pretty}
-\hlkwd{simplify2array}\hlstd{(py.smoke)}
-\end{alltt}
-\begin{verbatim}
-##           
-## cursmoke_f event   pyears
-##          0   762 46675.20
-##          1   788 44440.38
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
 
+\ifdraft
 
 \textbf{Proportional hazards modeling (Questions 3-8)}
 \begin{itemize}
   \item Referring to the code from the lecture notes, \textbf{use the log-rank test to determine if there are any differences in survival between the smoking groups}.
   
+\fi
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{survdiff}\hlstd{(s_death} \hlopt{~} \hlstd{cursmoke_f,}
-         \hlkwc{data} \hlstd{= frmgham_recoded)}
-\end{alltt}
-\begin{verbatim}
-## Call:
-## survdiff(formula = s_death ~ cursmoke_f, data = frmgham_recoded)
-## 
-##                 N Observed Expected (O-E)^2/E (O-E)^2/V
-## cursmoke_f=0 2253      762      796      1.42      2.91
-## cursmoke_f=1 2181      788      754      1.49      2.91
-## 
-##  Chisq= 2.9  on 1 degrees of freedom, p= 0.09
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+
+
+\ifdraft
 
   \item \textbf{Using a Cox proportional hazards regression model}, estimate the association between current smoking status (at baseline) and time to death. Estimate 2 models:
   \begin{itemize}
     \item An \textbf{unadjusted} model (only including smoking status), and
-    
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{coxph_death_smoke} \hlkwb{<-}
-  \hlkwd{coxph}\hlstd{(s_death} \hlopt{~} \hlstd{cursmoke,} \hlcom{# the regression formula}
-                    \hlkwc{data} \hlstd{= frmgham_recoded,} \hlcom{# the data}
-                    \hlkwc{ties} \hlstd{=} \hlstr{"efron"}\hlstd{)} \hlcom{# how to handle ties}
 
-\hlkwd{summary}\hlstd{(coxph_death_smoke)} \hlcom{# Model output}
-\end{alltt}
-\begin{verbatim}
-## Call:
-## coxph(formula = s_death ~ cursmoke, data = frmgham_recoded, ties = "efron")
-## 
-##   n= 4434, number of events= 1550 
-## 
-##             coef exp(coef) se(coef)     z Pr(>|z|)  
-## cursmoke 0.08668   1.09055  0.05081 1.706    0.088 .
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-##          exp(coef) exp(-coef) lower .95 upper .95
-## cursmoke     1.091      0.917    0.9872     1.205
-## 
-## Concordance= 0.511  (se = 0.006 )
-## Likelihood ratio test= 2.91  on 1 df,   p=0.09
-## Wald test            = 2.91  on 1 df,   p=0.09
-## Score (logrank) test = 2.91  on 1 df,   p=0.09
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-    
+\fi
+
+
+
+\ifdraft
+
     \item An \textbf{adjusted} model that also includes age (continuous), sex (binary) and education (4-category) in this model. (For nominal categorical variables, you may need to use the \codeword{factor()} operator in the formula as demonstrated in class.)
-    
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# fit adjusted model}
-\hlstd{coxph_death_smoke_adjusted} \hlkwb{<-}
-  \hlkwd{coxph}\hlstd{(s_death} \hlopt{~} \hlstd{cursmoke_f} \hlopt{+} \hlstd{age} \hlopt{+} \hlstd{sex_01_f} \hlopt{+} \hlstd{educ_f,}
-        \hlkwc{data} \hlstd{= frmgham_recoded,}
-        \hlkwc{ties} \hlstd{=} \hlstr{"efron"}\hlstd{)}
 
-\hlkwd{summary}\hlstd{(coxph_death_smoke_adjusted)}
-\end{alltt}
-\begin{verbatim}
-## Call:
-## coxph(formula = s_death ~ cursmoke_f + age + sex_01_f + educ_f, 
-##     data = frmgham_recoded, ties = "efron")
-## 
-##   n= 4321, number of events= 1509 
-##    (113 observations deleted due to missingness)
-## 
-##                  coef exp(coef)  se(coef)       z Pr(>|z|)    
-## cursmoke_f1  0.339445  1.404167  0.054351   6.245 4.23e-10 ***
-## age          0.095630  1.100351  0.003386  28.240  < 2e-16 ***
-## sex_01_f1   -0.549651  0.577151  0.053874 -10.203  < 2e-16 ***
-## educ_f2     -0.037740  0.962963  0.064130  -0.588 0.556201    
-## educ_f3     -0.167686  0.845619  0.078855  -2.127 0.033460 *  
-## educ_f4     -0.324557  0.722847  0.092120  -3.523 0.000426 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-##             exp(coef) exp(-coef) lower .95 upper .95
-## cursmoke_f1    1.4042     0.7122    1.2623    1.5620
-## age            1.1004     0.9088    1.0931    1.1077
-## sex_01_f1      0.5772     1.7326    0.5193    0.6414
-## educ_f2        0.9630     1.0385    0.8492    1.0919
-## educ_f3        0.8456     1.1826    0.7245    0.9870
-## educ_f4        0.7228     1.3834    0.6034    0.8659
-## 
-## Concordance= 0.724  (se = 0.006 )
-## Likelihood ratio test= 1038  on 6 df,   p=<2e-16
-## Wald test            = 979.3  on 6 df,   p=<2e-16
-## Score (logrank) test = 1061  on 6 df,   p=<2e-16
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-    
+\fi
+
+
+
+\ifdraft
+
   \end{itemize}
   \item Estimate a model with \textbf{an interaction between linear follow-up time} and \ul{all} of the covariates in the model. \textit{(Hint: you will need to use the ‘tt()‘ function within the ‘coxph‘ command.)}
 \end{itemize}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{cox_time_death_smoke_factored} \hlkwb{<-}
-  \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(timedth_yrs, death)} \hlopt{~}
-          \hlstd{cursmoke_f} \hlopt{+}
-          \hlstd{age} \hlopt{+}
-          \hlstd{sex_01_f} \hlopt{+}
-          \hlstd{educ_f} \hlopt{+}
-          \hlkwd{tt}\hlstd{(cursmoke)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(age)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(sex_01)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(}\hlkwd{as.integer}\hlstd{(educ_f} \hlopt{==} \hlnum{2}\hlstd{))} \hlopt{+}
-          \hlkwd{tt}\hlstd{(}\hlkwd{as.integer}\hlstd{(educ_f} \hlopt{==} \hlnum{3}\hlstd{))} \hlopt{+}
-          \hlkwd{tt}\hlstd{(}\hlkwd{as.integer}\hlstd{(educ_f} \hlopt{==} \hlnum{4}\hlstd{)),}
-        \hlkwc{data} \hlstd{= frmgham_recoded,}
-        \hlkwc{method} \hlstd{=} \hlstr{"efron"}\hlstd{,}
-        \hlkwc{tt} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,}\hlkwc{t}\hlstd{,}\hlkwc{...}\hlstd{) x}\hlopt{*}\hlstd{t)}
-
-\hlkwd{summary}\hlstd{(cox_time_death_smoke_factored)}
-\end{alltt}
-\begin{verbatim}
-## Call:
-## coxph(formula = Surv(timedth_yrs, death) ~ cursmoke_f + age + 
-##     sex_01_f + educ_f + tt(cursmoke) + tt(age) + tt(sex_01) + 
-##     tt(as.integer(educ_f == 2)) + tt(as.integer(educ_f == 3)) + 
-##     tt(as.integer(educ_f == 4)), data = frmgham_recoded, tt = function(x, 
-##     t, ...) x * t, method = "efron")
-## 
-##   n= 4321, number of events= 1509 
-##    (113 observations deleted due to missingness)
-## 
-##                                   coef  exp(coef)   se(coef)      z Pr(>|z|)
-## cursmoke_f1                  0.4363723  1.5470847  0.1305887  3.342 0.000833
-## age                          0.0877577  1.0917235  0.0080509 10.900  < 2e-16
-## sex_01_f1                   -0.2903968  0.7479667  0.1293844 -2.244 0.024804
-## educ_f2                      0.0024753  1.0024783  0.1541964  0.016 0.987192
-## educ_f3                     -0.1723551  0.8416802  0.1933545 -0.891 0.372718
-## educ_f4                     -0.2593351  0.7715645  0.2239116 -1.158 0.246781
-## tt(cursmoke)                -0.0068349  0.9931884  0.0084028 -0.813 0.415985
-## tt(age)                      0.0005738  1.0005740  0.0005211  1.101 0.270795
-## tt(sex_01)                  -0.0184881  0.9816817  0.0083232 -2.221 0.026332
-## tt(as.integer(educ_f == 2)) -0.0029913  0.9970132  0.0098984 -0.302 0.762499
-## tt(as.integer(educ_f == 3))  0.0002182  1.0002182  0.0122545  0.018 0.985795
-## tt(as.integer(educ_f == 4)) -0.0048224  0.9951892  0.0141866 -0.340 0.733912
-##                                
-## cursmoke_f1                 ***
-## age                         ***
-## sex_01_f1                   *  
-## educ_f2                        
-## educ_f3                        
-## educ_f4                        
-## tt(cursmoke)                   
-## tt(age)                        
-## tt(sex_01)                  *  
-## tt(as.integer(educ_f == 2))    
-## tt(as.integer(educ_f == 3))    
-## tt(as.integer(educ_f == 4))    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-##                             exp(coef) exp(-coef) lower .95 upper .95
-## cursmoke_f1                    1.5471     0.6464    1.1977    1.9983
-## age                            1.0917     0.9160    1.0746    1.1091
-## sex_01_f1                      0.7480     1.3370    0.5804    0.9639
-## educ_f2                        1.0025     0.9975    0.7410    1.3562
-## educ_f3                        0.8417     1.1881    0.5762    1.2295
-## educ_f4                        0.7716     1.2961    0.4975    1.1966
-## tt(cursmoke)                   0.9932     1.0069    0.9770    1.0097
-## tt(age)                        1.0006     0.9994    0.9996    1.0016
-## tt(sex_01)                     0.9817     1.0187    0.9658    0.9978
-## tt(as.integer(educ_f == 2))    0.9970     1.0030    0.9779    1.0165
-## tt(as.integer(educ_f == 3))    1.0002     0.9998    0.9765    1.0245
-## tt(as.integer(educ_f == 4))    0.9952     1.0048    0.9679    1.0232
-## 
-## Concordance= 0.725  (se = 0.006 )
-## Likelihood ratio test= 1045  on 12 df,   p=<2e-16
-## Wald test            = 987.7  on 12 df,   p=<2e-16
-## Score (logrank) test = 1070  on 12 df,   p=<2e-16
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{cox_time_death_smoke_not_factored} \hlkwb{<-}
-  \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(timedth_yrs, death)} \hlopt{~}
-          \hlstd{cursmoke} \hlopt{+}
-          \hlstd{age} \hlopt{+}
-          \hlstd{sex_01} \hlopt{+}
-          \hlkwd{factor}\hlstd{(educ)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(cursmoke)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(age)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(sex_01)} \hlopt{+}
-          \hlkwd{tt}\hlstd{(}\hlkwd{as.integer}\hlstd{(educ} \hlopt{==} \hlnum{2}\hlstd{))} \hlopt{+}
-          \hlkwd{tt}\hlstd{(}\hlkwd{as.integer}\hlstd{(educ} \hlopt{==} \hlnum{3}\hlstd{))} \hlopt{+}
-          \hlkwd{tt}\hlstd{(}\hlkwd{as.integer}\hlstd{(educ} \hlopt{==} \hlnum{4}\hlstd{)),}
-        \hlkwc{data} \hlstd{= frmgham_recoded,}
-        \hlkwc{method} \hlstd{=} \hlstr{"efron"}\hlstd{,}
-        \hlkwc{tt} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,}\hlkwc{t}\hlstd{,}\hlkwc{...}\hlstd{) x}\hlopt{*}\hlstd{t)}
-
-\hlkwd{summary}\hlstd{(cox_time_death_smoke_not_factored)}
-\end{alltt}
-\begin{verbatim}
-## Call:
-## coxph(formula = Surv(timedth_yrs, death) ~ cursmoke + age + sex_01 + 
-##     factor(educ) + tt(cursmoke) + tt(age) + tt(sex_01) + tt(as.integer(educ == 
-##     2)) + tt(as.integer(educ == 3)) + tt(as.integer(educ == 4)), 
-##     data = frmgham_recoded, tt = function(x, t, ...) x * t, method = "efron")
-## 
-##   n= 4321, number of events= 1509 
-##    (113 observations deleted due to missingness)
-## 
-##                                 coef  exp(coef)   se(coef)      z Pr(>|z|)    
-## cursmoke                   0.4363723  1.5470847  0.1305887  3.342 0.000833 ***
-## age                        0.0877577  1.0917235  0.0080509 10.900  < 2e-16 ***
-## sex_01                    -0.2903968  0.7479667  0.1293844 -2.244 0.024804 *  
-## factor(educ)2              0.0024753  1.0024783  0.1541964  0.016 0.987192    
-## factor(educ)3             -0.1723551  0.8416802  0.1933545 -0.891 0.372718    
-## factor(educ)4             -0.2593351  0.7715645  0.2239116 -1.158 0.246781    
-## tt(cursmoke)              -0.0068349  0.9931884  0.0084028 -0.813 0.415985    
-## tt(age)                    0.0005738  1.0005740  0.0005211  1.101 0.270795    
-## tt(sex_01)                -0.0184881  0.9816817  0.0083232 -2.221 0.026332 *  
-## tt(as.integer(educ == 2)) -0.0029913  0.9970132  0.0098984 -0.302 0.762499    
-## tt(as.integer(educ == 3))  0.0002182  1.0002182  0.0122545  0.018 0.985795    
-## tt(as.integer(educ == 4)) -0.0048224  0.9951892  0.0141866 -0.340 0.733912    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-##                           exp(coef) exp(-coef) lower .95 upper .95
-## cursmoke                     1.5471     0.6464    1.1977    1.9983
-## age                          1.0917     0.9160    1.0746    1.1091
-## sex_01                       0.7480     1.3370    0.5804    0.9639
-## factor(educ)2                1.0025     0.9975    0.7410    1.3562
-## factor(educ)3                0.8417     1.1881    0.5762    1.2295
-## factor(educ)4                0.7716     1.2961    0.4975    1.1966
-## tt(cursmoke)                 0.9932     1.0069    0.9770    1.0097
-## tt(age)                      1.0006     0.9994    0.9996    1.0016
-## tt(sex_01)                   0.9817     1.0187    0.9658    0.9978
-## tt(as.integer(educ == 2))    0.9970     1.0030    0.9779    1.0165
-## tt(as.integer(educ == 3))    1.0002     0.9998    0.9765    1.0245
-## tt(as.integer(educ == 4))    0.9952     1.0048    0.9679    1.0232
-## 
-## Concordance= 0.725  (se = 0.006 )
-## Likelihood ratio test= 1045  on 12 df,   p=<2e-16
-## Wald test            = 987.7  on 12 df,   p=<2e-16
-## Score (logrank) test = 1070  on 12 df,   p=<2e-16
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-% put only code chunks with "FALSE" here to produce final document
-
-\else
-
 \fi
+
+
+
+
+
+
 
 \section*{Questions}
 
@@ -533,7 +224,7 @@ Adapting the code presented in the lecture, and the additional piece below, comp
 
 
 % latex table generated in R 3.6.1 by xtable 1.8-4 package
-% Sun Nov 24 00:23:59 2019
+% Mon Nov 25 01:56:56 2019
 \begin{table}[H]
 \centering
 \parbox{10cm}{\caption{Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA.}} 
@@ -581,6 +272,8 @@ major limitations of simple visual comparison of the graphs of the survival curv
   
 \end{itemize}
 
+\pagebreak
+
 Figure 1. Kaplan-Meier Survival Estimates by Current Smoking Status
 
 
@@ -594,7 +287,6 @@ Figure 1. Kaplan-Meier Survival Estimates by Current Smoking Status
 \includegraphics[width=\maxwidth]{figure/unnamed-chunk-15-1} 
 
 \end{knitrout}
-
 
 \pagebreak
 
@@ -645,7 +337,7 @@ Answer the following questions about the log-rank test: \textbf{(10 points total
 
 \fi
 
-\subsection*{1}
+\subsection*{Sub-Question 1}
 
 The null hypothesis for the log-rank test here is that the survival curve for the smokers is equivalent to that for the nonsmokers.  More specifically, the null hypothesis is that the probability of survival for a nonsmoker is the same as the probability of survival for a smoker at all times during the study period, or formally:
 
@@ -659,11 +351,15 @@ The alternative hypothesis is that the survival curve for at least one group is 
 
 $$ \exists (t) \: S_1(t) \neq S_2(t) $$
 
-\subsection*{2}
+\subsection*{Sub-Question 2}
 
 
 
+The p-value of \textbf{0.09} indicates that we cannot reject the null hypothesis of no difference between the smoker and nonsmoker survival curves at the 5\% significance level.
 
+\vspace{2mm}
+
+One limitation of the log-rank test is that, although it allows for censoring, it requires that censoring to be non-informative, i.e., unrelated to survival probability.  (It also requires survival probabilities to be the same regardless of the entry date into the study, i.e., that survival probabilities are not affected by factors only present at specific dates when some participants were in the study and some were not.)  Another limitation is that, in the case of a significant result, the log-rank test does not identify the time or times at which the survival curves differ.  A third limitation of the log-rank test is its inability to distinguish, in the presence of more than two survival curves and a significant result, which curves are different without further testing.  A fourth limitation is that the log-rank test does not accommodate adjustment for covariates.
 
 \pagebreak
 
@@ -681,6 +377,59 @@ Answer the following questions about the Cox models estimated above: \textbf{(20
 
 \fi
 
+\subsection*{Sub-Question 1}
+\textbf{Why do we use specialized methods for survival analysis (instead of linear or logistic regression, for example)?}
+
+\vspace{2mm}
+
+We use specialized methods for survival analysis in order to fully incorporate the information contained in varying follow-up times.  We cannot use linear regression (with survival time as the outcome) due to the right-censoring of the events of interest (e.g., disease incidence or death) frequently present in survival data, which often leaves many survival times unknown.  Worse, the missing survival times are censored informatively, meaning that whether a survival time is unknown is associated with the outcome of survival time, i.e., the longest times are the ones most likely to be missing.  Thus using linear regression on the known survival times would systematically underestimate them.  Adjusting for follow-up time can partially account for variations in follow-up time but imposes assumptions on the relationship between follow-up time and event risk (e.g., that follow-up time is associated with risk in some kind of linear manner).
+
+\vspace{2mm}
+
+We cannot use logistic regression, either, even though we are interested in the binary presence or absence of an event, because logistic regression ignores variation in follow-up times, which arises both from variation in participants' entry times into the study and from differences in survival times among participants.  Doing a simple logistic regression with event presence or absence at the end of the study as the outcome effectively ignores the information contained in the participant surivival times.  Moreover, if systematic differences exist in entry times between the groups of interest (for example, exposed participants generally entered the study later than unexposed participants), logistic regression could produce particularly biased results.  Pooled logistic regression, which looks at binary event outcomes at several times over the course of the study instead of only at the end, can help account for variations in follow-up times, but is more appropriate when events are discovered at regularly spaced intervals at which outcomes can be evaluated (e.g., study visits conducted at the same intervals for all participants) and still fails to incorporate the specific information garnered from having exact event times, producing less accurate estimates of event risk than survival analysis methods that can fully accommodate exact event times.
+
+\subsection*{Sub-Question 2}
+\textbf{What are the advantages of the Cox model over other survival analysis methods? What is a potential disadvantage of the Cox model?}
+
+\vspace{2mm}
+
+Advantages:
+The Cox model does not require us to specify the distribution of the failure times $T$, also known as the baseline hazard.  Thus the Cox model is more robust than parametric proportional hazards models because bias cannot arise from misspecification of the distribution of failure times.
+
+Disadvantage:
+One potential disadvantage of the Cox model is the decreased precision (and increased variance) in the Cox model compared to fully parametric survival models that either specify the distribution of failure times accurately or are relatively robust to misspecifications.
+
+\vspace{2mm}
+
+\subsection*{Sub-Question 3}
+\textbf{What assumptions, if any, does the standard \textit{Cox} proportional hazards model make?}
+
+\vspace{2mm}
+
+The standard Cox proportional hazards model assumes
+
+\begin{itemize}
+  \item That the covariates have multiplicative associations with the hazard (as they reside in the parametric portion of the model, in an exponent relative to the hazard), as opposed to additive or other associations;
+  \item That the hazard ratios are constant over time (the \textit{proportional hazards assumption}), i.e., that the hazard in one group is a constant multiple of the hazard of any other group throughout time;
+  \item That survival times are independent among study participants; 
+  \item That measurements and times are accurate in the dataset; and
+  \item That any censoring is uninformative, i.e., not associated with survival time.
+  
+\end{itemize}
+
+\vspace{2mm}
+
+\subsection*{Sub-Question 4}
+\textbf{Compare the test of the smoking-mortality association between the log-rank test and the likelihood ratio test from the \ul{unadjusted} Cox proportional hazards model. What do you observe? Between these two analytic approaches, which one would you prefer, and why?}
+
+\vspace{2mm}
+
+
+
+Both the log-rank test and the likelihood ratio test from the unadjusted Cox proportional hazards model give nearly identical results, i.e., a chi-square statistic of 2.91 on one degree of freedom ($p = 0.088$).  Thus neither rejects the null hypothesis that no systematic difference in survival times exists between current smokers and nonsmokers at the 5\% significance level.  Were I not allowed to adjust for any other covariates, like here, I would prefer the log-rank test, as it is fully nonparametric and does not presume any prior relationship between the Kaplan-Meier survival curves on which it is based and is thus more robust to a wider variety of distributions of survival times among groups.  The Cox proportional hazards model, in contrast, assumes that hazard ratios (derived from relationships among survival curves) remain constant over time between any two groups.  Were I allowed to adjust for covariates, however, I would ultimately use the likelihood ratio test from the Cox proportional hazards model or some variation of it, as the Cox model can accommodate a wider variety of covariates and thus will ultimately produce more informed and accurate estimates of the relationship between a categorical exposure and survival time outcomes.
+
+\vspace{2mm}
+
 \pagebreak
 
 \section*{Question 5}
@@ -691,6 +440,42 @@ Write the equation for the log-hazard function for the \textit{adjusted} model y
 
 \fi
 
+Equation:
+
+$$ \log(h(t|\mathbf{x}, \boldsymbol{\beta})) =  \log[h_0(t)] + \beta_1\mathbb{I}(x_1 = 1) + \beta_2 x_2 + \beta_3\mathbb{I}(x_3 = 1) + \beta_4\mathbb{I}(x_4 = 2) + \beta_5\mathbb{I}(x_4 = 3) + \beta_6\mathbb{I}(x_4 = 4) $$
+
+\vspace{2mm}
+Definitions:
+
+\begin{itemize}
+
+  \item $ \log(h(t|\mathbf{x}, \boldsymbol{\beta})) $ is the natural logarithm of the instantaneous rate (hazard) of death at time $t$ for a participant who has survived up to that time $t$, given the covariates in $ \mathbf{x} $ and coefficients in $\boldsymbol{\beta}$;
+  \item $\log(h_0(t))$ is the baseline instantaneous rate (hazard) of death at time $t$ for a participant who was not a current smoker, was zero years old, was male, had 0-11 years of education at the first examination, and survived up to time $t$;
+  \item $\mathbf{x}$ is a vector of covariates containing
+    \begin{itemize}
+      \item $x_1$, an indicator variable for smoking corresponding to the dataset variable `cursmoke`, with $x_1 = 1$ indicating that the participant was a current smoker at the first examination and $x_1 = 0$ indicating that the participant was not;
+      \item $x_2$, a continuous variable for age of the participant at the first examination in years;
+      \item $x_3$, an indicator variable corresponding to the recoded variable `female` derived from the dataset variable `sex`, with $x_3 = 1$ indicating a female participant (originally `sex = 2`) and $x_3 = 0$ indicating a male participant (originally `sex = 1`);
+      \item $x_4$, a four-category categorical variable corresponding to the dataset variable `educ`, where
+        \begin{itemize}
+          \item $x_4 = 1$ corresponds to the dataset variable `educ = 1`, indicating that the participant had 0-11 years of education (in this equation, this condition is the reference condition and subsumed in the baseline hazard term $\log[h_0(t)]$ tercept term $x_0 = 1$);
+          \item $x_4 = 2$ corresponds to the dataset variable value `educ = 2`, indicating that the participant had a high school diploma or GED;
+          \item $x_4 = 3$ corresponds to the dataset variable value `educ = 3`, indicating that the participant had some college or vocational school;
+          \item $x_4 = 4$ corresponds to the dataset variable value `educ = 4`, indicating that the participant had a college degree or more;
+      \end{itemize}
+    \end{itemize}
+  \item $\mathbb{I}()$ is the formula for an indicator variable, which equals 1 if the equation inside the parentheses is true and 0 if it is not (used to create indicator variables for each non-reference level of the categorical variables in $\mathbf{x}$);  
+  \item $\boldsymbol{\beta}$ is a vector of coefficients including
+    \begin{itemize}
+      \item $\beta_1$ is the log hazard ratio comparing the hazard of death for a participant who was a current smoker at the first examination to the hazard of death for a participant who was not, holding the values of all other variables constant;
+      \item $\beta_2$ is the log hazard ratio for a one-year increase in age, holding the values of all other variables constant,
+      \item $\beta_3$ is the log hazard ratio comparing the hazard of death for a participant who was a female (in the numerator) to the hazard of death for a participant who was male (in the denominator) at the first examination, holding the values of all other variables constant;
+      \item $\beta_4$ is the log hazard ratio comparing the hazard of death for a participant who had a high school diploma or GED (in the numerator) to the hazard of death for a participant who had 0-11 years of education (in the denominator) at the first examination, holding the values of all other variables constant;
+      \item $\beta_5$ is the log hazard ratio comparing the hazard of death for a participant who had some college or vocational school (in the numerator) to the hazard of death for a participant who had 0-11 years of education (in the denominator) at the first examination, holding the values of all other variables constant;
+      \item $\beta_6$ is the log hazard ratio comparing the hazard of death for a participant who had some college or vocational school (in the numerator) to the hazard of death for a participant who had a college degree or more (in the denominator) at the first examination, holding the values of all other variables constant.
+    \end{itemize}
+  \end{itemize}
+      
 \pagebreak
 
 \section*{Question 6}
@@ -705,22 +490,26 @@ Complete the following table. How would you interpret the parameter estimate tha
 
 
 
+
+
 % latex table generated in R 3.6.1 by xtable 1.8-4 package
-% Sun Nov 24 00:24:01 2019
+% Mon Nov 25 01:56:58 2019
 \begin{table}[H]
 \centering
 \parbox{10cm}{\caption{Crude and adjusted hazard ratio (HR) estimates of the association between baseline smoking status and mortality. Framingham Cohort Study. 1948-1972, Framingham, MA.}} 
-\begin{tabular}{lllll}
+\begin{tabular}{lrrll}
   \hline
 Smoker & Events & Follow-Up Time (years) & Crude HR (95\% CI) & Adjusted HR (95\% CI) \\ 
   \hline
-No &  &  &  &  \\ 
-  Yes &  &  &  &  \\ 
+No & 762 & 46675.20 & 1. (reference) & 1. (reference) \\ 
+  Yes & 788 & 44440.38 & 1.091 (0.987—1.205) & 1.404 (1.262—1.562) \\ 
    \hline
 \end{tabular}
 \end{table}
 
-  
+
+The hazard of death during the study for a participant who was a current smoker at the start of the study was 1.404 times (95\% confidence interval: 1.262, 1.562) that of a participant who was not a current smoker at the start of the study after adjusting for age, sex, and level of education.  Hazard ratios, in general, correspond to incidence rate ratios.  (See the following reference for a discussion of why hazard ratios do not always approximate relative risks well: \textit{Sutradhar R and Austin PC. Relative rates not relative risks: addressing a widespread misinterpretation of hazard ratios. Annals of Epidemiology. 2018;28(1):54-57. doi:10.1016/j.annepidem.2017.10.014.})  That said, in the absence of competing events, rate ratios can approximate risk ratios.
+
 \pagebreak
 
 \section*{Question 7}
@@ -730,5 +519,49 @@ No &  &  &  &  \\
 Based on the model that included covariate-by-time interactions, is there evidence for a violation of the proportional hazards assumption in any of the variables? Indicate how you arrived at your conclusion. \ul{In 1-2 sentences} describe in general how you would account for any violations in the proportional hazards assumption (ignoring whether or not there were significant differences here). \textbf{(10 points)}
 
 \fi
+
+The sex variable appears to violate the proportional hazards assumption.  To evaluate violations of the proportional hazards assumption in the variables, I reran the adjusted model, adding interactions with time for all the covariates:
+
+\begin{equation*}
+\begin{split} 
+\log(h(t|\mathbf{x}, \boldsymbol{\beta})) = \log[h_0(t)] + \beta_1\mathbb{I}(x_1 = 1) + \beta_2 x_2 + \beta_3\mathbb{I}(x_3 = 1) + \beta_4\mathbb{I}(x_4 = 2) + \beta_5\mathbb{I}(x_4 = 3) + \beta_6\mathbb{I}(x_4 = 4) \; + \\ \beta_7\mathbb{I}(x_1 = 1)\times t + \beta_8x_2\times t + \beta_9\mathbb{I}(x_3 = 1)\times t + \beta_{10}\mathbb{I}(x_4 = 2)\times t + \beta_{11}\mathbb{I}(x_4 = 3)\times t + \beta_{12}\mathbb{I}(x_4 = 4)\times t 
+\end{split} 
+\end{equation*}
+
+All functions, covariates, and parameters have the same defnitions as in question 5, with the addition of the coefficients $\beta_7, \beta_8, \ldots, \beta_12$ to model possible interactions with time.  I then produced the table below, which shows a significant interaction at the 5\% significance level ($p = 0.026$) for the interaction between sex and time.  I then conducted a global likelihood ratio test comparing the log likelihood of the adjusted model with the time interaction to the same model without the time interaction, obtaining a significant chi-square value of 4.148 with one degree of freedom ($p = 0.042$), indicating that the interaction improves the model accuracy.
+
+\vspace{2mm}
+
+To account for a violation of the proportional hazards assumption: If the violation were in a confounder (e.g., in sex here), I would either include the time interaction(s) with the confounder in the model to account for its effects on the exposure-outcome association, or, if I could categorize the confounder easily and did not care about evaluating its association with the outcome, I would estimate a model stratified by the levels of that confounder to allow for a different baseline hazard function in each stratum.  If the violation were in the exposure of interest (e.g., in current smoking here), I would include all the time interactions in the model and report time-specific instead of overall effects.
+
+
+
+
+% latex table generated in R 3.6.1 by xtable 1.8-4 package
+% Mon Nov 25 01:56:58 2019
+\begin{table}[H]
+\centering
+\parbox{11cm}{\caption{Estimates of associations between baseline smoking status and mortality including adjustment for potential interactions with time. Framingham Cohort Study. 1948-1972, Framingham, MA.}} 
+\begin{tabular}{lrrrrr}
+  \hline
+Covariate & Beta & e\verb|^|Beta & Standard Error & z & p \\ 
+  \hline
+Current Smoker & 0.44 & 1.55 & 0.13 & 3.34 & 0.00 \\ 
+  Age & 0.09 & 1.09 & 0.01 & 10.90 & 0.00 \\ 
+  Female Sex & -0.29 & 0.75 & 0.13 & -2.24 & 0.02 \\ 
+  Education: High School & 0.00 & 1.00 & 0.15 & 0.02 & 0.99 \\ 
+  Education: Some College & -0.17 & 0.84 & 0.19 & -0.89 & 0.37 \\ 
+  Education: College Degree & -0.26 & 0.77 & 0.22 & -1.16 & 0.25 \\ 
+  Current Smoker by Time & -0.01 & 0.99 & 0.01 & -0.81 & 0.42 \\ 
+  Age by Time Interaction & 0.00 & 1.00 & 0.00 & 1.10 & 0.27 \\ 
+  Female by Time Interaction & -0.02 & 0.98 & 0.01 & -2.22 & 0.03 \\ 
+  Education: High School by Time & -0.00 & 1.00 & 0.01 & -0.30 & 0.76 \\ 
+  Education: Some College by Time & 0.00 & 1.00 & 0.01 & 0.02 & 0.99 \\ 
+  Education: College Degree by Time & -0.00 & 1.00 & 0.01 & -0.34 & 0.73 \\ 
+   \hline
+\end{tabular}
+\end{table}
+
+
 
 \end{document}

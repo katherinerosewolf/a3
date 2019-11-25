@@ -1,0 +1,64 @@
+---
+title: "Lab Assignment Two Revised"
+author: "Katherine Wolf"
+date: "October 31, 2019"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+mainfont: Calibri
+monofont: Lucida Console
+    
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r load required packages, include = FALSE}
+
+library(tidyverse) # for dplyr, tidyr, ggplot2
+library(here) # not necessary - useful for finding files
+library(foreign) # for reading in .dta dataframes
+library(tableone)
+library(xtable)
+library(knitr)
+library(tableone)
+library(kableExtra)
+
+library(geepack)
+library(doBy)
+library(stats4) # needed for MLE function
+library(blm)
+```
+
+
+
+### b. Log-binomial model:
+
+**Equation:** 
+
+
+% # fit adjusted model
+% coxph_death_smoke_adjusted <- 
+%   coxph(s_death ~ cursmoke_f + age + sex_01_f + educ_f, 
+%         data = frmgham_recoded, 
+%         ties = "efron")
+
+
+$$ \log(h(t|\mathbf{x}, \boldsymbol{\beta})) =  \log[h_0(t)] + \beta_1\mathbb{I}(x_1 = 1) + \beta_2 x_2 + \beta_3\mathbb{I}(x_3 = 1) + \beta_4\mathbb{I}(x_4 = 2) + \beta_5\mathbb{I}(x_4 = 3) + \beta_6\mathbb{I}(x_4 = 4) $$
+
+
+$$ \log(h(t|\mathbf{x}, \boldsymbol{\beta})) = \beta_0 + \beta_1\mathbb{I}(x_1 = 1) + \beta_1\mathbb{I}(x_1 = 2) + \beta_2x_2 + \beta_3x_3 + \beta_4\mathbb{I}(x_1 = 1)\times t + \beta_5\mathbb{I}(x_1 = 2)\times t + \beta_6x_2\times t + \beta_7x_3\times t $$
+
+$$ ln(\Pr[Y = 1|\mathbf{x}] = \beta_0 + \beta_1x_1 + \beta_2x_2 + \beta_3x_3 + \beta_4x_4 + \beta_5x_5 + \beta_6x_6 + \beta_7x_7 + \beta_8x_8 + \beta_9x_9 = \mathbf{x}\boldsymbol{\beta} $$
+
+hlkjlkj
+
+$$ \beta_j=ln(\Pr[Y=1|x_j=1, \mathbf{x}_{-j}])-ln(\Pr[Y=1|x_j=0, \mathbf{x}_{-j}]) $$
+
+By the properties of logarithms, the change in the log risk is equivalent to the log of the risk ratio:
+
+$$ \beta_j = \frac{\Pr[Y=1|x_j=1, \mathbf{x}_{-j}]}{\Pr[Y=1|x_j=0, \mathbf{x}_{-j}]} $$
+
